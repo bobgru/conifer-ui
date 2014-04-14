@@ -1,0 +1,22 @@
+<div ng-controller="EvoCtrl" >
+	<form ng-submit="">
+		<div class="container-fluid">
+		  <div class="row">
+		    <div class="span2" ng-repeat="specimen in specimens" >
+				<div>
+					<img ng-src="{{specimen.data.imageUrl}}"
+				     ng-click="selectSpecimen($index)"
+				     ng-class="{selected:$index==selectedSpecimen}">
+					</img>
+				</div>
+				<div>
+					<button class="btn" ng-click="selectSpecimen($index)">
+						Evo
+					</button>
+					<a class="btn" ng-href="#/evo/{{specimen.id}}">Info</a>
+				</div>
+			</div>
+		  </div>
+		</div>
+	</form>
+</div>

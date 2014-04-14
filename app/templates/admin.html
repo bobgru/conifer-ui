@@ -1,0 +1,92 @@
+<div ng-controller="AdminCtrl">
+	<div class="container-fluid">
+		<div class="row">
+			<div class="span3">Age</div>
+			<div class="span3">
+				<input type="text" class="form-control" 
+					ng-model="specimen.data.treeParams.age">
+			</div>
+			<div class="span2">years</div>
+		</div>
+		<div class="row">
+			<div class="span3">Needles?</div>
+			<div class="span3">
+				<input type="text" class="form-control" 
+					ng-model="specimen.data.treeParams.needles">
+			</div>
+			<div class="span2">(true/false)</div>
+		</div>
+		<div class="row">
+			<div class="span3">Trunk growth per year</div>
+			<div class="span3">
+				<input type="text" class="form-control" 
+					ng-model="specimen.data.treeParams.udTrunkLengthIncrementPerYear">
+			</div>
+			<div class="span2">length units</div>
+		</div>
+		<div class="row">
+			<div class="span3">Trunk:branch growth ratio</div>
+			<div class="span3">
+				<input type="text" class="form-control" 
+					ng-model="specimen.data.treeParams.udTrunkBranchLengthRatio">
+			</div>
+			<div class="span2">(percentage)</div>
+		</div>
+		<div class="row">
+			<div class="span3">Trunk:branch angles</div>
+			<div class="span3">
+				<input type="text" class="form-control" 
+					ng-model="specimen.data.treeParams.udTrunkBranchAngles">
+			</div>
+			<div class="span2">radians (comma-separated)</div>
+		</div>
+		<div class="row">
+			<div class="span3">Trunk girth</div>
+			<div class="span3">
+				<input type="text" class="form-control" 
+					ng-model="specimen.data.treeParams.udTrunkGirth">
+			</div>
+			<div class="span2">length units</div>
+		</div>
+		<div class="row">
+			<div class="span3">Whorls per year</div>
+			<div class="span3">
+				<input type="text" class="form-control" 
+					ng-model="specimen.data.treeParams.udWhorlsPerYear">
+			</div>
+			<div class="span2">(integer)</div>
+		</div>
+		<div class="row">
+			<div class="span3">Branches per whorl</div>
+			<div class="span3">
+				<input type="text" class="form-control" 
+					ng-model="specimen.data.treeParams.udWhorlSize">
+			</div>
+			<div class="span2">(integer)</div>
+		</div>
+		<div class="row">
+			<div class="span3">Branch girth</div>
+			<div class="span3">
+				<input type="text" class="form-control" 
+					ng-model="specimen.data.treeParams.udBranchGirth">
+			</div>
+			<div class="span2">length units</div>
+		</div>
+		<div class="row">
+			<div class="span3">Branch:branch length ratio</div>
+			<div class="span3">
+				<input type="text" class="form-control" 
+					ng-model="specimen.data.treeParams.udBranchBranchLengthRatio">
+			</div>
+			<div class="span2">(percentage)</div>
+		</div>
+		<div class="row">
+			<div class="span3">Branch:branch length ratio 2</div>
+			<div class="span3">
+				<input type="text" class="form-control" 
+					ng-model="specimen.data.treeParams.udBranchBranchLengthRatio2">
+			</div>
+			<div class="span2">(percentage)</div>
+		</div>
+	</div>
+</div>
