@@ -1,42 +1,40 @@
 <div ng-controller="EvoCtrl" >
-	<div class="container-fluid">
-
-	  <div class="row" ng-repeat=
+	<table class="table-bordered">
+		<tr ng-repeat=
 			"rowSpecs in [specimens.slice(0,4), specimens.slice(4,8)]">
-	    <div class="span2" ng-repeat="specimen in rowSpecs" >
-			<div>
-				<img ng-src="{{specimen.data.imageUrl}}"
-			     ng-click="selectSpecimen(specimen.id)"
-			     ng-class="{ selected:{{specimen.id == selectedSpecimen}} }">
-				</img>
-			</div>
-			<div>
-				<button class="btn btn-primary"
-				 		ng-click="nextGeneration(specimen.id)">
-					Evo {{specimen.id}}
-				</button>
-				<a class="btn btn-primary" ng-href="#/evo/{{specimen.id}}">Info</a>
-			</div>
-		</div>
-	  </div>
-
-	</div>
-	<div class="container-fluid">
-	  <div class="row-fluid">
-	    <div class="span1" ng-repeat="ancestor in lineage" >
-			<div>
-				<img ng-src="{{ancestor.specimen.data.imageUrl}}"
-			     ng-click="selectAncestor(ancestor.id)"
-			     ng-class="{ selected:{{ancestor.id==selectedAncestor}} }">
-				</img>
-			</div>
-			<div>
-				<a class="btn btn-primary"
-				 	ng-href="#/evo/{{ancestor.data}}">Info</a>
-			</div>
-		</div>
-	  </div>
-	</div>
+			<td ng-repeat="specimen in rowSpecs">
+				<div>
+					<img ng-src="{{specimen.data.imageUrl}}"
+				     ng-click="selectSpecimen(specimen.id)"
+				     ng-class="{ selected:{{specimen.id == selectedSpecimen}} }">
+					</img>
+				</div>
+				<div>
+					<button class="btn btn-primary"
+					 		ng-click="nextGeneration(specimen.id)">
+						<strong>></strong>
+						<!-- <span class="glyphicon glyphicon-play"></span> -->
+					</button>
+					<a class="btn btn-primary"
+					 	ng-href="#/evo/{{specimen.id}}"><tt>i</tt></a>
+				</div>
+			</td>
+		</tr>
+	</table>
+		
+	<table class="table-bordered">
+		<tr>
+			<td ng-repeat="ancestor in lineage">
+				<a ng-href="#/evo/{{ancestor.data}}">
+					<img ng-src="{{ancestor.specimen.data.imageUrl}}"
+				     ng-click="selectAncestor(ancestor.id)"
+				     ng-class="{ selected:{{ancestor.id==selectedAncestor}} }">
+					</img>
+				</a>
+			</td>
+		</tr>
+	</table>
+	
 	<!-- <p>Raw lineage = {{lineageRaw}}</p>
 	<p>Lineage = {{lineage}}</p>
 	<hr>

@@ -32,3 +32,11 @@
 .selected {
     background-color: lightgreen;
 }
+
+.table  td {
+    vertical-align: bottom;
+}
+
+.table-bordered  td {
+    vertical-align: bottom;
+}
