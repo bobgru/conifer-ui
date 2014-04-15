@@ -1,22 +1,44 @@
 <div ng-controller="EvoCtrl" >
-	<form ng-submit="">
-		<div class="container-fluid">
-		  <div class="row">
-		    <div class="span2" ng-repeat="specimen in specimens" >
-				<div>
-					<img ng-src="{{specimen.data.imageUrl}}"
-				     ng-click="selectSpecimen($index)"
-				     ng-class="{selected:$index==selectedSpecimen}">
-					</img>
-				</div>
-				<div>
-					<button class="btn" ng-click="selectSpecimen($index)">
-						Evo
-					</button>
-					<a class="btn" ng-href="#/evo/{{specimen.id}}">Info</a>
-				</div>
+	<div class="container-fluid">
+
+	  <div class="row" ng-repeat=
+			"rowSpecs in [specimens.slice(0,4), specimens.slice(4,8)]">
+	    <div class="span2" ng-repeat="specimen in rowSpecs" >
+			<div>
+				<img ng-src="{{specimen.data.imageUrl}}"
+			     ng-click="selectSpecimen(specimen.id)"
+			     ng-class="{ selected:{{specimen.id == selectedSpecimen}} }">
+				</img>
 			</div>
-		  </div>
+			<div>
+				<button class="btn btn-primary"
+				 		ng-click="nextGeneration(specimen.id)">
+					Evo {{specimen.id}}
+				</button>
+				<a class="btn btn-primary" ng-href="#/evo/{{specimen.id}}">Info</a>
+			</div>
 		</div>
-	</form>
+	  </div>
+
+	</div>
+	<div class="container-fluid">
+	  <div class="row-fluid">
+	    <div class="span1" ng-repeat="ancestor in lineage" >
+			<div>
+				<img ng-src="{{ancestor.specimen.data.imageUrl}}"
+			     ng-click="selectAncestor(ancestor.id)"
+			     ng-class="{ selected:{{ancestor.id==selectedAncestor}} }">
+				</img>
+			</div>
+			<div>
+				<a class="btn btn-primary"
+				 	ng-href="#/evo/{{ancestor.data}}">Info</a>
+			</div>
+		</div>
+	  </div>
+	</div>
+	<!-- <p>Raw lineage = {{lineageRaw}}</p>
+	<p>Lineage = {{lineage}}</p>
+	<hr>
+	<p>Specimens = {{specimens}}</p> -->
 </div>

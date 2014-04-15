@@ -6,16 +6,13 @@ module.exports = function(config){
     files : [
       'bower_components/angular/angular.js',
       'bower_components/angular-route/angular-route.js',
+      'bower_components/angular-resource/angular-resource.js',
       'bower_components/angular-mocks/angular-mocks.js',
-//      'app/js/**/*.js',
-      'app/js/app.js',
-      'app/js/controllers.js',
-      'app/js/directives.js',
-      'app/js/filters.js',
-      'app/js/services.js',
+      'app/js/**/*.js',
       'test/unit/**/*.js'
-//      'test/unit/servicesSpec.js'
     ],
+
+    exclude : ['app/js/*min.js'],
 
     autoWatch : true,
 

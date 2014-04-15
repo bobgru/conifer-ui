@@ -12,41 +12,41 @@ describe('service', function() {
   //   }));
   // });
   
-  describe('Database', function() {
-      
-      var database;
-      
-      describe('.init and .queryAll', function() {
-        var store = {};
-    
-        beforeEach(function() {
-              angular.mock.module('myApp.services', ['ngResource']);
-              
-              angular.mock.inject(function(_Database_) {
-                  database = _Database_;
-              })
-              
-              // // LocalStorage mock.
-              // spyOn(localStorage, 'getItem').andCallFake(function(key) {
-              //     return store[key];
-              // });
-              // Object.defineProperty(sessionStorage, "setItem", { writable: true });
-              // spyOn(localStorage, 'setItem').andCallFake(function(key, value) {
-              //     store[key] = value;
-              // });
-          });
-                          
-        afterEach(function () {
-            store = {};
-        });
-        
-        it('should return empty array', function() {
-                var rows = [];
-                database.init();
-                rows = database.queryAll();
-                expect(rows.length).toEqual(0);
-        });
-      });
+  // describe('Database', function() {
+  //     
+  //     var database;
+  //     
+  //     describe('.init and .queryAll', function() {
+  //       var store = {};
+  //   
+  //       beforeEach(function() {
+  //             angular.mock.module('myApp.services', ['ngResource']);
+  //             
+  //             angular.mock.inject(function(_Database_) {
+  //                 database = _Database_;
+  //             })
+  //             
+  //             // // LocalStorage mock.
+  //             // spyOn(localStorage, 'getItem').andCallFake(function(key) {
+  //             //     return store[key];
+  //             // });
+  //             // Object.defineProperty(sessionStorage, "setItem", { writable: true });
+  //             // spyOn(localStorage, 'setItem').andCallFake(function(key, value) {
+  //             //     store[key] = value;
+  //             // });
+  //         });
+  //                         
+  //       afterEach(function () {
+  //           store = {};
+  //       });
+  //       
+  //       it('should return empty array', function() {
+  //               var rows = [];
+  //               database.init();
+  //               rows = database.queryAll();
+  //               expect(rows.length).toEqual(0);
+  //       });
+  //     });
   
       // describe('.insertInto and .queryAll', function() {
       //   var scope;
@@ -72,5 +72,5 @@ describe('service', function() {
       //   });
       // });
 
-    });  
+   // });  
 });

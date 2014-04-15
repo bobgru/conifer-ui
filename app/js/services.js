@@ -3,7 +3,8 @@
 /* Services */
 
 
-var appServices = angular.module('myApp.services', ['ngResource']);
+//var appServices = angular.module('myApp.services', ['ngResource']);
+var appServices = angular.module('myApp.services',[]);
 
 // Demonstrate how to register services
 // In this case it is a simple value service.
@@ -193,3 +194,52 @@ appServices.factory('Specimens',
     };
 
   });
+
+appServices.factory('Lineage',
+    function(){
+        var data = {
+            rows: []
+        };
+
+        return {
+            init: function() {
+                data = {rows: []};
+            }
+            , insertInto: function(specimenId) {
+                  var i = data.rows.length;
+                  data.rows.push({id: i, data: specimenId});
+                  return i;
+            }
+            , deleteID: function(i) {
+                // find element of data.rows with id = i, slice it out
+
+            }
+            , updateID: function(i, obj) {
+                // find element of data.rows with id = i, replace data w/ obj
+
+            }
+            , queryID: function(id) {
+                var match;
+                data.rows.forEach(function(item){
+                    if (item.id == id) {
+                        match = item;
+                    }
+                });
+                return match;
+            }
+            , queryIDs: function(ids) {
+                // find the elements of data.rows for the ids and return
+            }
+            , queryLast: function() {
+                if (data.rows.length > 0) {
+                    return data.rows[data.rows.length - 1]
+                } else {
+                    return null; // Better way?
+                }
+            }
+            , queryAll: function() {
+                return data.rows; // Returning alias!
+            }
+      };
+});
+
