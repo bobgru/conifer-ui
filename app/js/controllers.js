@@ -1,73 +1,112 @@
 'use strict';
 
 /* Controllers */
-var app = angular.module('myApp.controllers', []);
+var app = angular.module('myApp.controllers', ['ngResource']);
 
-app.controller('EvoCtrl', ['$scope', '$rootScope', 'Specimens', 'Lineage',
-    function($scope, $rootScope, Specimens, Lineage) {
+app.controller('EvoCtrl', ['$scope', '$rootScope', '$http',
+                            'Specimens', 'Lineage',
+               
+    function($scope, $rootScope, $http, Specimens, Lineage) {
         
-        $scope.specimens = Specimens.queryAll();
+        if (typeof($rootScope.specimenIDs) == "undefined") {
+            $scope.specimenIDs = [0];
+            $rootScope.specimenIDs = [0];
+        } else {
+            $scope.specimenIDs = $rootScope.specimenIDs;
+        }
+        
+        $scope.specimens = Specimens.queryIDs($scope.specimenIDs);
         $rootScope.specimens = $scope.specimens;
         
-        if (typeof($scope.specimens[0]) != "undefined") {
-            $scope.selectedSpecimen = $scope.specimens[0].id;
+        if (typeof($rootScope.lineage) == "undefined") {
+            $scope.lineage = [];
+            $rootScope.lineage = [];
+        } else {
+            $scope.lineage = $rootScope.lineage;
         }
+
+        // Just for highlighting parent -- could do it in CSS.
+        $scope.selectedSpecimen = $scope.specimenIDs[0];
+        
+        // OK if undefined -- nothing to select
         $scope.selectedAncestor = $rootScope.selectedAncestor;
 
+        //$scope.svgTest = "To be replaced by result of POST";
+
+        $scope.selectAncestor = function (linId) {
+           $scope.selectedAncestor = linId;
+           $rootScope.selectedAncestor = linId;
+        };
+
+        // Side-effects:
+        //   updates Lineage, $scope.lineage, $rootScope.lineage
+        //
         // Objects in lineage array have form:
         // lineage[0] = {
         //      id: lineage ID
         //    , data: specimenID
         //    , specimen: { id: specimenID, data: specimen data }
         // }
-        $scope.resolveLineageData = function() {
-            var result = [];
-            var lineageIds = Lineage.queryAll();
-            lineageIds.forEach(function(linId) {
-                //var obj = Object.create(linId);
-                var obj = {};
-                obj.id = linId.id;
-                obj.data = linId.data;
-                var spec = Specimens.queryID(obj.data);
-                if (spec != null) {
-                    obj.specimen = spec;
-                    result.push(obj);
-                }
-            });
-            return result;
-        };
+        $scope.updateLineage = function(parentSpecID) {
+            var linID, linObj, parentSpec;
 
-        // The lineage is the sequence of parent specimens including specimens[0].
-        $scope.lineage = $scope.resolveLineageData();
-        $scope.lineageRaw = Lineage.queryAll();
-        $rootScope.lineage = $scope.lineage;
-                
-        // $scope.selectSpecimen = function (index) {
-        //    $scope.selectedSpecimen = index;
-        // }
-
-        $scope.selectAncestor = function (linId) {
-           $scope.selectedAncestor = linId;
-           $rootScope.selectedAncestor = linId;
-        }
-        
-        $scope.nextGeneration = function(specId) {
-            Lineage.insertInto(specId);
-            $scope.lineage = $scope.resolveLineageData();
+            linID = Lineage.insertInto(parentSpecID);
+            linObj = Lineage.queryID(linID);
+            
+            parentSpec = Specimens.queryID(parentSpecID);
+            linObj.specimen = parentSpec;
+            
+            // The one and only place to initialize and
+            // update $scope.lineage and $rootScope.lineage.
+            $scope.lineage.push(linObj)
             $rootScope.lineage = $scope.lineage;
+        }
+
+        var newSpecimen = function(parentSpecID) {
+            var newSpecID = Specimens.reproduce(parentSpecID);
+            var newSpec   = Specimens.queryID(newSpecID);
+            var setImg = function(spec, data) {
+                spec.data.imageUrl = "img/" + data;
+            };
+            
+            $scope.specimenIDs.push(newSpecID);
+            $rootScope.specimenIDs = $scope.specimenIDs;
+            
+            // post request for drawing, receiving url to image
+            // save url in specimen
+            //newSpec.data.imageUrl = "img/specimen01.svg";
+            $scope.drawTree(newSpec.data.treeParams,
+                function(data, status, headers, config){
+                    setImg(newSpec, data);
+                });
+        };
+        
+        $scope.nextGeneration = function(parentSpecID) {
+            var numKids, i, imgUrl;
+            
+            $scope.updateLineage(parentSpecID);
+
+            // Reset specimenIDs starting with new parent.
+            $scope.specimenIDs = [parentSpecID];
+            $rootScope.specimenIDs = $scope.specimenIDs;
+
+            numKids = 3;
+            for (i = 0; i < numKids; ++i) {
+                newSpecimen(parentSpecID);
+            }
+
+            $scope.specimens = Specimens.queryIDs($scope.specimenIDs);
+            $rootScope.specimens = $scope.specimens;
         };
 
-        $scope.drawTree = function() {
-            // var tp = $rootScope.treeParams;
-            // var ud = {
-            //   udTrunkLengthIncrementPerYear: tp.tpTrunkLengthIncrementPerYear
-            // , udTrunkBranchLengthRatio: tp.tpTrunkBranchLengthRatio
-            // }
-            // $http({
-            //             method : 'POST',
-            //             url : '/conifer/draw',
-            //             data : ud
-            //         });
+        $scope.drawTree = function(tp, ok) {
+            $http({
+                        method : 'POST',
+                        url : 'conifer/draw',
+                        data : 'userdata=' + angular.toJson(tp),
+                        headers: {'Content-Type':
+                            'application/x-www-form-urlencoded'}
+                    }).success(ok);
         };
         
   }]);

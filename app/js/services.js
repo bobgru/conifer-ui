@@ -16,12 +16,13 @@ appServices.factory('Specimens',
           rows: []
       };
       
-      var insertFunc;
+      var insertFunc, queryIDFunc, copySpecData, copyTreeParams,
+          mutateFunc;
       
       // Hardcode specimens for now. 
       // The specimens are the parent and its children.
       // The parent is at index 0.
-      var default_specimens = [
+      var default_specimen_data = [
           { "treeParams": { 
               "age": 2
               , "needles": false
@@ -38,127 +39,165 @@ appServices.factory('Specimens',
               , "imageUrl": "img/specimen00.svg" 
           }
 
-         , { "treeParams": { 
-                "age": 2
-              , "needles": false
-              , "udTrunkLengthIncrementPerYear": 1.4
-              , "udTrunkBranchLengthRatio": 0.6
-              , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
-              , "udTrunkGirth": 5.0
-              , "udWhorlsPerYear": 4
-              , "udWhorlSize": 5
-              , "udBranchGirth": 1.0
-              , "udBranchBranchLengthRatio": 1.0
-              , "udBranchBranchLengthRatio2": 1.0
-              }
-              , "imageUrl": "img/specimen01.svg" 
-          }
-
-        , { "treeParams": { 
-                "age": 2
-              , "needles": false
-              , "udTrunkLengthIncrementPerYear": 1.45
-              , "udTrunkBranchLengthRatio": 0.6
-              , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
-              , "udTrunkGirth": 5.0
-              , "udWhorlsPerYear": 4
-              , "udWhorlSize": 5
-              , "udBranchGirth": 1.0
-              , "udBranchBranchLengthRatio": 1.0
-              , "udBranchBranchLengthRatio2": 1.0
-              }
-              , "imageUrl": "img/specimen02.svg" 
-          }
-
-          , { "treeParams": { 
-                  "age": 2
-                , "needles": false
-                , "udTrunkLengthIncrementPerYear": 1.35
-                , "udTrunkBranchLengthRatio": 0.6
-                , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
-                , "udTrunkGirth": 5.0
-                , "udWhorlsPerYear": 4
-                , "udWhorlSize": 5
-                , "udBranchGirth": 1.0
-                , "udBranchBranchLengthRatio": 1.0
-                , "udBranchBranchLengthRatio2": 1.0
-                }
-                , "imageUrl": "img/specimen03.svg" 
-            }
-
-            , { "treeParams": { 
-                    "age": 2
-                  , "needles": false
-                  , "udTrunkLengthIncrementPerYear": 1.4
-                  , "udTrunkBranchLengthRatio": 0.65
-                  , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
-                  , "udTrunkGirth": 5.0
-                  , "udWhorlsPerYear": 4
-                  , "udWhorlSize": 5
-                  , "udBranchGirth": 1.0
-                  , "udBranchBranchLengthRatio": 1.0
-                  , "udBranchBranchLengthRatio2": 1.0
-                  }
-              , "imageUrl": "img/specimen04.svg" 
-              }
-
-              , { "treeParams": { 
-                      "age": 2
-                    , "needles": false
-                    , "udTrunkLengthIncrementPerYear": 1.35
-                    , "udTrunkBranchLengthRatio": 0.6
-                    , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
-                    , "udTrunkGirth": 5.0
-                    , "udWhorlsPerYear": 4
-                    , "udWhorlSize": 5
-                    , "udBranchGirth": 1.0
-                    , "udBranchBranchLengthRatio": 1.0
-                    , "udBranchBranchLengthRatio2": 1.0
-                    }
-                , "imageUrl": "img/specimen05.svg" 
-                }
-
-                , { "treeParams": { 
-                        "age": 2
-                      , "needles": false
-                      , "udTrunkLengthIncrementPerYear": 1.4
-                      , "udTrunkBranchLengthRatio": 0.65
-                      , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
-                      , "udTrunkGirth": 5.0
-                      , "udWhorlsPerYear": 4
-                      , "udWhorlSize": 5
-                      , "udBranchGirth": 1.0
-                      , "udBranchBranchLengthRatio": 1.0
-                      , "udBranchBranchLengthRatio2": 1.0
-                      }
-                  , "imageUrl": "img/specimen06.svg" 
-                  }
-
-              , { "treeParams": { 
-                      "age": 2
-                    , "needles": false
-                    , "udTrunkLengthIncrementPerYear": 1.35
-                    , "udTrunkBranchLengthRatio": 0.6
-                    , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
-                    , "udTrunkGirth": 5.0
-                    , "udWhorlsPerYear": 4
-                    , "udWhorlSize": 5
-                    , "udBranchGirth": 1.0
-                    , "udBranchBranchLengthRatio": 1.0
-                    , "udBranchBranchLengthRatio2": 1.0
-                    }
-                , "imageUrl": "img/specimen07.svg" 
-                }
+        //  , { "treeParams": { 
+        //         "age": 2
+        //       , "needles": false
+        //       , "udTrunkLengthIncrementPerYear": 1.4
+        //       , "udTrunkBranchLengthRatio": 0.6
+        //       , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
+        //       , "udTrunkGirth": 5.0
+        //       , "udWhorlsPerYear": 4
+        //       , "udWhorlSize": 5
+        //       , "udBranchGirth": 1.0
+        //       , "udBranchBranchLengthRatio": 1.0
+        //       , "udBranchBranchLengthRatio2": 1.0
+        //       }
+        //       , "imageUrl": "img/specimen01.svg" 
+        //   }
+        // 
+        // , { "treeParams": { 
+        //         "age": 2
+        //       , "needles": false
+        //       , "udTrunkLengthIncrementPerYear": 1.45
+        //       , "udTrunkBranchLengthRatio": 0.6
+        //       , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
+        //       , "udTrunkGirth": 5.0
+        //       , "udWhorlsPerYear": 4
+        //       , "udWhorlSize": 5
+        //       , "udBranchGirth": 1.0
+        //       , "udBranchBranchLengthRatio": 1.0
+        //       , "udBranchBranchLengthRatio2": 1.0
+        //       }
+        //       , "imageUrl": "img/specimen02.svg" 
+        //   }
+        // 
+        //   , { "treeParams": { 
+        //           "age": 2
+        //         , "needles": false
+        //         , "udTrunkLengthIncrementPerYear": 1.35
+        //         , "udTrunkBranchLengthRatio": 0.6
+        //         , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
+        //         , "udTrunkGirth": 5.0
+        //         , "udWhorlsPerYear": 4
+        //         , "udWhorlSize": 5
+        //         , "udBranchGirth": 1.0
+        //         , "udBranchBranchLengthRatio": 1.0
+        //         , "udBranchBranchLengthRatio2": 1.0
+        //         }
+        //         , "imageUrl": "img/specimen03.svg" 
+        //     }
+        // 
+        //     , { "treeParams": { 
+        //             "age": 2
+        //           , "needles": false
+        //           , "udTrunkLengthIncrementPerYear": 1.4
+        //           , "udTrunkBranchLengthRatio": 0.65
+        //           , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
+        //           , "udTrunkGirth": 5.0
+        //           , "udWhorlsPerYear": 4
+        //           , "udWhorlSize": 5
+        //           , "udBranchGirth": 1.0
+        //           , "udBranchBranchLengthRatio": 1.0
+        //           , "udBranchBranchLengthRatio2": 1.0
+        //           }
+        //       , "imageUrl": "img/specimen04.svg" 
+        //       }
+        // 
+        //       , { "treeParams": { 
+        //               "age": 2
+        //             , "needles": false
+        //             , "udTrunkLengthIncrementPerYear": 1.35
+        //             , "udTrunkBranchLengthRatio": 0.6
+        //             , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
+        //             , "udTrunkGirth": 5.0
+        //             , "udWhorlsPerYear": 4
+        //             , "udWhorlSize": 5
+        //             , "udBranchGirth": 1.0
+        //             , "udBranchBranchLengthRatio": 1.0
+        //             , "udBranchBranchLengthRatio2": 1.0
+        //             }
+        //         , "imageUrl": "img/specimen05.svg" 
+        //         }
+        // 
+        //         , { "treeParams": { 
+        //                 "age": 2
+        //               , "needles": false
+        //               , "udTrunkLengthIncrementPerYear": 1.4
+        //               , "udTrunkBranchLengthRatio": 0.65
+        //               , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
+        //               , "udTrunkGirth": 5.0
+        //               , "udWhorlsPerYear": 4
+        //               , "udWhorlSize": 5
+        //               , "udBranchGirth": 1.0
+        //               , "udBranchBranchLengthRatio": 1.0
+        //               , "udBranchBranchLengthRatio2": 1.0
+        //               }
+        //           , "imageUrl": "img/specimen06.svg" 
+        //           }
+        // 
+        //       , { "treeParams": { 
+        //               "age": 2
+        //             , "needles": false
+        //             , "udTrunkLengthIncrementPerYear": 1.35
+        //             , "udTrunkBranchLengthRatio": 0.6
+        //             , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
+        //             , "udTrunkGirth": 5.0
+        //             , "udWhorlsPerYear": 4
+        //             , "udWhorlSize": 5
+        //             , "udBranchGirth": 1.0
+        //             , "udBranchBranchLengthRatio": 1.0
+        //             , "udBranchBranchLengthRatio2": 1.0
+        //             }
+        //         , "imageUrl": "img/specimen07.svg" 
+        //         }
       ];
 
-      insertFunc = function(obj) {
+      insertFunc = function(specimenData) {
             var i = data.rows.length;
-            data.rows.push({id: i, data: obj});
+            data.rows.push({id: i, data: specimenData});
             return i;
         };
+
+        queryIDFunc = function(id) {
+            var match = null;
+            data.rows.forEach(function(item){
+                if (item.id == id) {
+                    match = item;
+                }
+            });
+            return match;
+        };
         
-      default_specimens.forEach(function(specimen){
-          insertFunc(specimen);
+        copySpecData = function(specData) {
+            var newSpecData = {};
+            newSpecData.treeParams = copyTreeParams(specData.treeParams);
+            newSpecData.imageUrl = "";
+            return newSpecData;
+        };
+        
+        copyTreeParams = function(tp) {
+            var newTP = {};
+            newTP.age = tp.age;
+            newTP.needles = tp.needles;
+            newTP.udTrunkLengthIncrementPerYear = tp.udTrunkLengthIncrementPerYear;
+            newTP.udTrunkBranchLengthRatio = tp.udTrunkBranchLengthRatio;
+            newTP.udTrunkBranchAngles = tp.udTrunkBranchAngles;
+            newTP.udTrunkGirth = tp.udTrunkGirth;
+            newTP.udWhorlsPerYear = tp.udWhorlsPerYear;
+            newTP.udWhorlSize = tp.udWhorlSize;
+            newTP.udBranchGirth = tp.udBranchGirth;
+            newTP.udBranchBranchLengthRatio = tp.udBranchBranchLengthRatio;
+            newTP.udBranchBranchLengthRatio2 = tp.udBranchBranchLengthRatio2;
+            return newTP;
+        };
+        
+        // Mutates in-place.
+        mutateFunc = function(specData) {
+            specData.treeParams.udTrunkLengthIncrementPerYear *= 1.1;
+        };
+        
+      default_specimen_data.forEach(function(specimenData){
+          insertFunc(specimenData);
       });
       
       
@@ -176,20 +215,27 @@ appServices.factory('Specimens',
               // find element of data.rows with id = i, replace data w/ obj
               
           }
-          , queryID: function(id) {
-              var match;
-              data.rows.forEach(function(item){
-                  if (item.id == id) {
-                      match = item;
+          , queryID: queryIDFunc
+          
+          , queryIDs: function(ids) {
+              var result = [];
+              ids.forEach(function(id){
+                  var spec = queryIDFunc(id);
+                  if (spec != null) {
+                      result.push(spec);
                   }
               });
-              return match;
-          }
-          , queryIDs: function(ids) {
-              // find the elements of data.rows for the ids and return
+              return result;
           }
           , queryAll: function() {
               return data.rows; // Returning alias!
+          }
+          , reproduce: function(parentID) {
+              var parentSpec, newSpecData;
+              parentSpec = queryIDFunc(parentID);
+              newSpecData = copySpecData(parentSpec.data);
+              mutateFunc(newSpecData);
+              return insertFunc(newSpecData);
           }
     };
 
