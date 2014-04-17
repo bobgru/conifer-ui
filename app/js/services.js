@@ -218,7 +218,7 @@ appServices.factory('Specimens',
                 pct = randomPercent(0.2);
                 specData.treeParams.udTrunkBranchAngles[index] *= pct;
             }
-            if (key != "age" && key != "needles") {
+            else if (key != "age" && key != "needles") {
                 // specData.treeParams.udTrunkLengthIncrementPerYear *= 1.1;
                 pct = randomPercent(0.2);
                 specData.treeParams[key] *= pct;
