@@ -17,7 +17,7 @@ appServices.factory('Specimens',
       };
       
       var insertFunc, queryIDFunc, copySpecData, copyTreeParams,
-          mutateFunc;
+          copyArray, mutateFunc;
       
       // Hardcode specimens for now. 
       // The specimens are the parent and its children.
@@ -181,7 +181,7 @@ appServices.factory('Specimens',
             newTP.needles = tp.needles;
             newTP.udTrunkLengthIncrementPerYear = tp.udTrunkLengthIncrementPerYear;
             newTP.udTrunkBranchLengthRatio = tp.udTrunkBranchLengthRatio;
-            newTP.udTrunkBranchAngles = tp.udTrunkBranchAngles;
+            newTP.udTrunkBranchAngles = copyArray(tp.udTrunkBranchAngles);
             newTP.udTrunkGirth = tp.udTrunkGirth;
             newTP.udWhorlsPerYear = tp.udWhorlsPerYear;
             newTP.udWhorlSize = tp.udWhorlSize;
@@ -191,9 +191,38 @@ appServices.factory('Specimens',
             return newTP;
         };
         
+        // Shallow copy of array.
+        copyArray = function(arr) {
+            var newArr = [];
+            for (var i = 0; i < arr.length; ++i) {
+                newArr[i] = arr[i];
+            }
+            return newArr;
+        };
+        
         // Mutates in-place.
         mutateFunc = function(specData) {
-            specData.treeParams.udTrunkLengthIncrementPerYear *= 1.1;
+            var pct;
+            var randomProperty = function (obj) {
+                var keys = Object.keys(obj)
+                return keys[ keys.length * Math.random() << 0];
+            };
+            var randomPercent = function (amplitude) {
+                return 1 + (Math.random() * 2 * amplitude - amplitude);
+            };
+            
+            var key = randomProperty(specData.treeParams);
+            if (key == "udTrunkBranchAngles") {
+                var index = Math.floor(Math.random() * 
+                    specData.treeParams.udTrunkBranchAngles.length);
+                pct = randomPercent(0.2);
+                specData.treeParams.udTrunkBranchAngles[index] *= pct;
+            }
+            if (key != "age" && key != "needles") {
+                // specData.treeParams.udTrunkLengthIncrementPerYear *= 1.1;
+                pct = randomPercent(0.2);
+                specData.treeParams[key] *= pct;
+            }
         };
         
       default_specimen_data.forEach(function(specimenData){
