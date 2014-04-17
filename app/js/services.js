@@ -266,6 +266,7 @@ appServices.factory('Specimens',
               mutateFunc(newSpecData);
               return insertFunc(newSpecData);
           }
+          , copySpecimen: copySpecData
     };
 
   });

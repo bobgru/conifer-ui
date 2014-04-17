@@ -1,4 +1,4 @@
-<div ng-controller="EvoCtrl" >
+<div>
 	<!-- <div>
 		<header>Sample embedded directly as SVG</header>
 		<div ng-include="'img/specimen00.svg'"></div>
@@ -26,7 +26,7 @@
 						<!-- <span class="glyphicon glyphicon-play"></span> -->
 					</button>
 					<a class="btn btn-primary"
-					 	ng-href="#/evo/{{specimen.id}}"><tt>i</tt></a>
+					 	ng-href="#/view/{{specimen.id}}"><tt>i</tt></a>
 				</div>
 			</td>
 		</tr>
@@ -35,7 +35,7 @@
 	<table class="table-bordered">
 		<tr>
 			<td ng-repeat="ancestor in lineage">
-				<a ng-href="#/evo/{{ancestor.data}}">
+				<a ng-href="#/view/{{ancestor.data}}">
 					<img ng-src="{{ancestor.specimen.data.imageUrl}}"
 				     ng-click="selectAncestor(ancestor.id)"
 				     ng-class="{ selected:{{ancestor.id==selectedAncestor}} }">

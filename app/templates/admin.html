@@ -1,34 +1,47 @@
 <div ng-controller="AdminCtrl">
+	<form name="adminForm">
+	<div>
+		<button class="btn btn-primary" ng-show="{{view}}" ng-click="experiment()">Experiment</button>
+		<button class="btn btn-primary" ng-hide="{{view}}" ng-click="test()"
+			ng-disabled="!adminForm.$valid">Test</button>
+		<button class="btn btn-primary" ng-hide="{{view}}" ng-click="propagate()"
+			ng-disabled="!adminForm.$valid">Propagate</button>
+		<button class="btn btn-primary" ng-hide="{{view}}" ng-click="destroy()">Destroy</button>
+	</div>
 	<div class="container-fluid">
 		<div class="row">
 			<div class="span3">Age</div>
 			<div class="span3">
-				<input type="text" class="form-control" 
-					ng-model="specimen.data.treeParams.age">
+				<input required type="number" ng-maxlength='1' ng-minlength='1'
+				 	class="form-control" ng-model="specimenData.treeParams.age"
+					 ng-disabled="{{view}}">
 			</div>
 			<div class="span2">years</div>
 		</div>
 		<div class="row">
 			<div class="span3">Needles?</div>
 			<div class="span3">
-				<input type="text" class="form-control" 
-					ng-model="specimen.data.treeParams.needles">
+				<input type="checkbox" class="form-control" 
+					ng-model="specimenData.treeParams.needles"
+					ng-disabled="{{view}}">
 			</div>
 			<div class="span2">(true/false)</div>
 		</div>
 		<div class="row">
 			<div class="span3">Trunk growth per year</div>
 			<div class="span3">
-				<input type="text" class="form-control" 
-					ng-model="specimen.data.treeParams.udTrunkLengthIncrementPerYear">
+				<input required type="number" step="0.05" class="form-control" 
+					ng-model="specimenData.treeParams.udTrunkLengthIncrementPerYear"
+					ng-disabled="{{view}}">
 			</div>
 			<div class="span2">length units</div>
 		</div>
 		<div class="row">
 			<div class="span3">Trunk:branch growth ratio</div>
 			<div class="span3">
-				<input type="text" class="form-control" 
-					ng-model="specimen.data.treeParams.udTrunkBranchLengthRatio">
+				<input required type="number" step="0.05" class="form-control" 
+					ng-model="specimenData.treeParams.udTrunkBranchLengthRatio"
+					ng-disabled="{{view}}">
 			</div>
 			<div class="span2">(percentage)</div>
 		</div>
@@ -36,57 +49,65 @@
 			<div class="span3">Trunk:branch angles</div>
 			<div class="span3">
 				<input type="text" class="form-control" 
-					ng-model="specimen.data.treeParams.udTrunkBranchAngles">
+					ng-model="specimenData.treeParams.udTrunkBranchAngles"
+					ng-disabled="{{view}}">
 			</div>
 			<div class="span2">radians (comma-separated)</div>
 		</div>
 		<div class="row">
 			<div class="span3">Trunk girth</div>
 			<div class="span3">
-				<input type="text" class="form-control" 
-					ng-model="specimen.data.treeParams.udTrunkGirth">
+				<input required type="number" step="0.05" class="form-control" 
+					ng-model="specimenData.treeParams.udTrunkGirth"
+					ng-disabled="{{view}}">
 			</div>
 			<div class="span2">length units</div>
 		</div>
 		<div class="row">
 			<div class="span3">Whorls per year</div>
 			<div class="span3">
-				<input type="text" class="form-control" 
-					ng-model="specimen.data.treeParams.udWhorlsPerYear">
+				<input required type="number" class="form-control" 
+					ng-model="specimenData.treeParams.udWhorlsPerYear"
+					ng-disabled="{{view}}">
 			</div>
 			<div class="span2">(integer)</div>
 		</div>
 		<div class="row">
 			<div class="span3">Branches per whorl</div>
 			<div class="span3">
-				<input type="text" class="form-control" 
-					ng-model="specimen.data.treeParams.udWhorlSize">
+				<input required type="number" class="form-control" 
+					ng-model="specimenData.treeParams.udWhorlSize"
+					ng-disabled="{{view}}">
 			</div>
 			<div class="span2">(integer)</div>
 		</div>
 		<div class="row">
 			<div class="span3">Branch girth</div>
 			<div class="span3">
-				<input type="text" class="form-control" 
-					ng-model="specimen.data.treeParams.udBranchGirth">
+				<input required type="number" step="0.05" class="form-control" 
+					ng-model="specimenData.treeParams.udBranchGirth"
+					ng-disabled="{{view}}">
 			</div>
 			<div class="span2">length units</div>
 		</div>
 		<div class="row">
 			<div class="span3">Branch:branch length ratio</div>
 			<div class="span3">
-				<input type="text" class="form-control" 
-					ng-model="specimen.data.treeParams.udBranchBranchLengthRatio">
+				<input required type="number" step="0.05" class="form-control" 
+					ng-model="specimenData.treeParams.udBranchBranchLengthRatio"
+					ng-disabled="{{view}}">
 			</div>
 			<div class="span2">(percentage)</div>
 		</div>
 		<div class="row">
 			<div class="span3">Branch:branch length ratio 2</div>
 			<div class="span3">
-				<input type="text" class="form-control" 
-					ng-model="specimen.data.treeParams.udBranchBranchLengthRatio2">
+				<input required type="number" step="0.05" class="form-control" 
+					ng-model="specimenData.treeParams.udBranchBranchLengthRatio2"
+					ng-disabled="{{view}}">
 			</div>
 			<div class="span2">(percentage)</div>
 		</div>
 	</div>
+	</form>
 </div>
