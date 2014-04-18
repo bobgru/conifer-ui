@@ -11,14 +11,14 @@ var app = angular.module('myApp', [
 ]);
 
 app.config(['$routeProvider', function($routeProvider) {
-  $routeProvider.otherwise({redirectTo: '/specimens'});
-  $routeProvider.when('/specimens', {
-      templateUrl: 'templates/evo.html', 
-      controller: 'EvoCtrl'});
+  $routeProvider.otherwise({redirectTo: '/population'});
+  $routeProvider.when('/population', {
+      templateUrl: 'templates/population.html', 
+      controller: 'PopulationCtrl'});
   $routeProvider.when('/view/:id', {
-      templateUrl: 'templates/specimen.html', 
+      templateUrl: 'templates/individual.html', 
       controller: 'ViewCtrl'});
   $routeProvider.when('/experiment/:id', {
-      templateUrl: 'templates/specimen.html', 
+      templateUrl: 'templates/individual.html', 
       controller: 'ExperimentCtrl'});
 }]);

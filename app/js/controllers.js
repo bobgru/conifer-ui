@@ -3,8 +3,8 @@
 /* Controllers */
 var app = angular.module('myApp.controllers', ['ngResource']);
 
-app.controller('EvoCtrl', ['$scope', '$rootScope', '$http',
-                            'Specimens', 'Lineage',
+app.controller('PopulationCtrl', ['$scope', '$rootScope', '$http',
+                                  'Specimens', 'Lineage',
                
     function($scope, $rootScope, $http, Specimens, Lineage) {
         
@@ -206,7 +206,7 @@ app.controller('AdminCtrl', ['$scope', '$rootScope', '$routeParams',
             var id = newSpecimen($scope.specimenData);
             $rootScope.specimenIDs = [id];
             $rootScope.lineage = [];
-            $location.path("/specimens");
+            $location.path("/population");
         };
         
         // Only available from ViewCtrl.
