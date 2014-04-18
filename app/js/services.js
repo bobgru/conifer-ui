@@ -176,20 +176,26 @@ appServices.factory('CurrentPopulation',
     });
 
 
-appServices.factory('Lineage',
-    function(){
-        var data = {
-            rows: []
-        };
-
+appServices.factory('Lineage', [ 'Population',
+    function(Population){
+        var data;
+        
+        data = { rows: [] };
+        
         return {
             init: function() {
-                data = {rows: []};
+                data = { rows: [] };
             }
-            , insertInto: function(individualId) {
-                  var i = data.rows.length;
-                  data.rows.push({id: i, data: individualId});
-                  return i;
+            , insertInto: function(individualID) {
+                  var individual, linID, linObj;
+
+                  individual = Population.queryID(individualID);
+                  linID = data.rows.length;
+                  linObj = {id: linID, data: individualID, individual: individual};
+                  
+                  data.rows.push(linObj);
+                  
+                  return linID;
             }
             , deleteID: function(i) {
                 // find element of data.rows with id = i, slice it out
@@ -218,9 +224,9 @@ appServices.factory('Lineage',
                     return null; // Better way?
                 }
             }
-            , queryAll: function() {
+            , query: function() {
                 return data.rows; // Returning alias!
             }
       };
-});
+}]);
 
