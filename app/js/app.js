@@ -15,6 +15,9 @@ app.config(['$routeProvider', function($routeProvider) {
   $routeProvider.when('/population', {
       templateUrl: 'templates/population.html', 
       controller: 'PopulationCtrl'});
+  $routeProvider.when('/propagate/:id', {
+      templateUrl: 'templates/population.html', 
+      controller: 'PropagationCtrl'});
   $routeProvider.when('/view/:id', {
       templateUrl: 'templates/individual.html', 
       controller: 'ViewCtrl'});
