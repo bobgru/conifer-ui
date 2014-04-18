@@ -10,9 +10,8 @@
 	</button> -->
 	
 	<table class="table-bordered">
-		<tr ng-repeat=
-			"rows in [population.slice(0,4), population.slice(4,8)]">
-			<td ng-repeat="individual in rows">
+		<tr>
+			<td ng-repeat="individual in population">
 				<div>
 					<img ng-src="{{individual.data.imageUrl}}"
 				     ng-click="selectIndividual(individual.id)"
