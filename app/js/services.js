@@ -157,6 +157,25 @@ appServices.factory('Population',
 
   });
 
+appServices.factory('CurrentPopulation',
+    function(){
+        var populationIDs;
+        populationIDs = [];
+
+        return {
+            init: function() {
+                populationIDs = [];
+            }
+            , push: function(id) {
+                  populationIDs.push(id);
+            }
+            , query: function() {
+                return populationIDs;
+            }
+        };
+    });
+
+
 appServices.factory('Lineage',
     function(){
         var data = {

@@ -5,30 +5,29 @@ var app = angular.module('myApp.controllers', ['ngResource']);
 
 /*
     $rootScope
-        populationIDs
-        population
         lineage
         selectedAncestor
 */
 
-app.controller('PopulationCtrl', ['$scope', '$rootScope', 'Population', 
-    function($scope, $rootScope, Population) {
+app.controller('PopulationCtrl', ['$scope', '$rootScope', 'Population', 'CurrentPopulation',
+    function($scope, $rootScope, Population, CurrentPopulation) {
         
         /*
             $scope
-                populationIDs
                 population
                 lineage
                 selectedAncestor
                 selectedIndividual
         */
         
-        if (typeof($rootScope.populationIDs) == "undefined") {
-            $rootScope.populationIDs = [0];
+        var populationIDs;
+
+        populationIDs = CurrentPopulation.query();
+        if (populationIDs.length == 0) {
+            CurrentPopulation.push(0);
         }
-        $scope.populationIDs = $rootScope.populationIDs;
-        $scope.population = Population.queryIDs($scope.populationIDs);
-        $rootScope.population = $scope.population;
+        
+        $scope.population = Population.queryIDs(populationIDs);
         
         if (typeof($rootScope.lineage) == "undefined") {
             $scope.lineage = [];
@@ -38,7 +37,7 @@ app.controller('PopulationCtrl', ['$scope', '$rootScope', 'Population',
         }
 
         // Just for highlighting parent -- could do it in CSS.
-        $scope.selectedIndividual = $scope.populationIDs[0];
+        $scope.selectedIndividual = populationIDs[0];
         
         // OK if undefined -- nothing to select
         $scope.selectedAncestor = $rootScope.selectedAncestor;
@@ -54,10 +53,11 @@ app.controller('PopulationCtrl', ['$scope', '$rootScope', 'Population',
 
 app.controller('PropagationCtrl', ['$rootScope', '$http',
                                    '$routeParams', '$location',
-                                   'Population', 'Lineage',
+                                   'Population', 'CurrentPopulation', 'Lineage',
                
-    function($rootScope, $http, $routeParams, $location, Population, Lineage) {
-        var parentSpecID, numKids, i, imgUrl,
+    function($rootScope, $http, $routeParams, $location, 
+            Population, CurrentPopulation, Lineage) {
+        var parentID, numKids, i, imgUrl,
             populationIDs, population, newLinObj;
         
         /*
@@ -73,33 +73,33 @@ app.controller('PropagationCtrl', ['$rootScope', '$http',
         //    , data: individualID
         //    , individual: { id: individualID, data: individual data }
         // }
-        var updateLineage = function(parentSpecID) {
-            var linID, linObj, parentSpec;
+        var updateLineage = function(parentID) {
+            var linID, linObj, parent;
 
-            linID = Lineage.insertInto(parentSpecID);
+            linID = Lineage.insertInto(parentID);
             linObj = Lineage.queryID(linID);
             
-            parentSpec = Population.queryID(parentSpecID);
-            linObj.individual = parentSpec;
+            parent = Population.queryID(parentID);
+            linObj.individual = parent;
             
             return linObj;
         }
 
-        var newIndividual = function(parentSpecID) {
-            var newSpecID = Population.reproduce(parentSpecID);
-            var newSpec   = Population.queryID(newSpecID);
+        var newIndividual = function(parentID) {
+            var childID = Population.reproduce(parentID);
+            var child   = Population.queryID(childID);
             var setImg = function(spec, data) {
                 spec.data.imageUrl = "img/" + data;
             };
             
-            populationIDs.push(newSpecID);
+            CurrentPopulation.push(childID);
             
             // post request for drawing, receiving url to image
             // save url in individual
             //newSpec.data.imageUrl = "img/individual01.svg";
-            drawTree(newSpec.data.treeParams,
+            drawTree(child.data.treeParams,
                 function(data, status, headers, config){
-                    setImg(newSpec, data);
+                    setImg(child, data);
                 });
         };
         
@@ -112,22 +112,20 @@ app.controller('PropagationCtrl', ['$rootScope', '$http',
                 }).success(ok);
         };
         
-        parentSpecID = $routeParams.id;
-        newLinObj = updateLineage(parentSpecID);
+        parentID = $routeParams.id;
+        newLinObj = updateLineage(parentID);
 
         // Reset populationIDs starting with new parent.
-        populationIDs = [parentSpecID];
+        CurrentPopulation.init();
+        CurrentPopulation.push(parentID);
 
         // Propagate parent to give next generation population.
         numKids = 3;
         for (i = 0; i < numKids; ++i) {
-            newIndividual(parentSpecID);
+            newIndividual(parentID);
         }
-        population = Population.queryIDs(populationIDs);
 
         // Update $rootScope variables to communicate with PopulationCtrl.
-        $rootScope.populationIDs = populationIDs;
-        $rootScope.population = population;
         if (typeof($rootScope.lineage) == "undefined") {
             $rootScope.lineage = [newLinObj];
         } else {
@@ -222,10 +220,12 @@ app.controller('ExperimentCtrl', ['$scope', '$rootScope', '$routeParams',
         $scope.propagate = function() {
             Lineage.init();
             Population.init();
+            CurrentPopulation.init();
+            
             var id = newIndividual($scope.individualData);
+            CurrentPopulation.push(id);
 
             $rootScope.lineage = [];
-            $rootScope.populationIDs = [id];
 
             $location.path("/population");
         };
