@@ -52,21 +52,16 @@ app.controller('PopulationCtrl', ['$scope', '$rootScope', 'Population',
   }]);
 
 
-app.controller('PropagationCtrl', ['$scope', '$rootScope', '$http',
+app.controller('PropagationCtrl', ['$rootScope', '$http',
                                    '$routeParams', '$location',
                                    'Population', 'Lineage',
                
-    function($scope, $rootScope, $http, $routeParams, $location, Population, Lineage) {
+    function($rootScope, $http, $routeParams, $location, Population, Lineage) {
         var parentSpecID, numKids, i, imgUrl,
             populationIDs, population, newLinObj;
         
         /*
             $scope
-                populationIDs
-                population
-                lineage
-                selectedAncestor
-                selectedIndividual
         */
             
         // Side-effects:
@@ -142,9 +137,9 @@ app.controller('PropagationCtrl', ['$scope', '$rootScope', '$http',
         $location.path('/population');
   }]);
 
-app.controller('ViewCtrl', ['$scope', '$routeParams',
+app.controller('ViewCtrl', ['$scope', '$routeParams', '$location', 
                             'Population', 'Lineage',
-    function($scope, $routeParams, Population, Lineage) {
+    function($scope, $routeParams, $location, Population, Lineage) {
         // Take the parent if we fail to find the id.
         // Assumes there is at least one individual.
         var match = Population.queryID($routeParams.id);
@@ -154,11 +149,17 @@ app.controller('ViewCtrl', ['$scope', '$routeParams',
         
         $scope.individualData = match.data;
         $scope.view = true;
+
+        $scope.experiment = function() {
+            $location.path("/experiment/" + $routeParams.id);
+        };
     }]);
   
-app.controller('ExperimentCtrl', ['$scope', '$routeParams',
-                                  'Population', 'Lineage',
-    function($scope, $routeParams, Population, Lineage) {
+app.controller('ExperimentCtrl', ['$scope', '$rootScope', '$routeParams',
+                                  '$location', '$http', 'Population', 'Lineage',
+    function($scope, $rootScope, $routeParams, $location, $http, Population, Lineage) {
+        var newIndividual, drawTree, fetchDrawing;
+
         // Take the parent if we fail to find the id.
         // Assumes there is at least one individual.
         var match = Population.queryID($routeParams.id);
@@ -173,30 +174,7 @@ app.controller('ExperimentCtrl', ['$scope', '$routeParams',
         $scope.individualData.imageUrl = match.data.imageUrl;
 
         $scope.view = false;
-    }]);
 
-app.controller('AdminCtrl', ['$scope', '$rootScope', '$routeParams',
-                             '$location', '$http', 'Population',
-    function($scope, $rootScope, $routeParams, $location, $http, Population) {
-        var newIndividual, drawTree, fetchDrawing;
-        
-        newIndividual = function(specData) {
-            var newSpecID = Population.insertInto(specData);
-            var newSpec   = Population.queryID(newSpecID);
-            var setImg = function(spec, data) {
-                spec.data.imageUrl = "img/" + data;
-            };
-            
-            // post request for drawing, receiving url to image
-            // save url in individual
-            drawTree(newSpec.data.treeParams,
-                function(data, status, headers, config){
-                    setImg(newSpec, data);
-                });
-            
-            return newSpecID;
-        };
-        
         fetchDrawing = function(specData) {
             var setImg = function(specData, data) {
                 specData.imageUrl = "img/" + data;
@@ -220,29 +198,46 @@ app.controller('AdminCtrl', ['$scope', '$rootScope', '$routeParams',
                     }).success(ok);
         };
         
-        // Only available from ExperimentCtrl.
-        $scope.destroy = function() {
-            $location.path("/view/" + $routeParams.id);
-        };
-        
-        // Only available from ExperimentCtrl.
         $scope.test = function() {
             fetchDrawing($scope.individualData);
         };
         
-        // Only available from ExperimentCtrl.
+        newIndividual = function(specData) {
+            var newSpecID = Population.insertInto(specData);
+            var newSpec   = Population.queryID(newSpecID);
+            var setImg = function(spec, data) {
+                spec.data.imageUrl = "img/" + data;
+            };
+            
+            // post request for drawing, receiving url to image
+            // save url in individual
+            drawTree(newSpec.data.treeParams,
+                function(data, status, headers, config){
+                    setImg(newSpec, data);
+                });
+            
+            return newSpecID;
+        };
+        
         $scope.propagate = function() {
-            // Reset lineage and insert individualData as first item.
+            Lineage.init();
             Population.init();
             var id = newIndividual($scope.individualData);
-            $rootScope.populationIDs = [id];
+
             $rootScope.lineage = [];
+            $rootScope.populationIDs = [id];
+
             $location.path("/population");
         };
         
-        // Only available from ViewCtrl.
-        $scope.experiment = function() {
-            $location.path("/experiment/" + $routeParams.id);
+        $scope.destroy = function() {
+            $location.path("/view/" + $routeParams.id);
         };
+        
+    }]);
+
+app.controller('AdminCtrl', [
+    function() {
+        
     }]);
   
