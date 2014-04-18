@@ -10,7 +10,7 @@ var appServices = angular.module('myApp.services',[]);
 // In this case it is a simple value service.
 appServices.value('version', '0.1');
 
-appServices.factory('Specimens',
+appServices.factory('Population',
   function(){
       var data = {
           rows: []
@@ -19,10 +19,8 @@ appServices.factory('Specimens',
       var insertFunc, queryIDFunc, copySpecData, copyTreeParams,
           copyArray, mutateFunc;
       
-      // Hardcode specimens for now. 
-      // The specimens are the parent and its children.
-      // The parent is at index 0.
-      var default_specimen_data = [
+      // Hardcode an initial population of one.
+      var default_individual_data = [
           { "treeParams": { 
               "age": 2
               , "needles": false
@@ -38,123 +36,11 @@ appServices.factory('Specimens',
               }
               , "imageUrl": "img/specimen00.svg" 
           }
-
-        //  , { "treeParams": { 
-        //         "age": 2
-        //       , "needles": false
-        //       , "udTrunkLengthIncrementPerYear": 1.4
-        //       , "udTrunkBranchLengthRatio": 0.6
-        //       , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
-        //       , "udTrunkGirth": 5.0
-        //       , "udWhorlsPerYear": 4
-        //       , "udWhorlSize": 5
-        //       , "udBranchGirth": 1.0
-        //       , "udBranchBranchLengthRatio": 1.0
-        //       , "udBranchBranchLengthRatio2": 1.0
-        //       }
-        //       , "imageUrl": "img/specimen01.svg" 
-        //   }
-        // 
-        // , { "treeParams": { 
-        //         "age": 2
-        //       , "needles": false
-        //       , "udTrunkLengthIncrementPerYear": 1.45
-        //       , "udTrunkBranchLengthRatio": 0.6
-        //       , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
-        //       , "udTrunkGirth": 5.0
-        //       , "udWhorlsPerYear": 4
-        //       , "udWhorlSize": 5
-        //       , "udBranchGirth": 1.0
-        //       , "udBranchBranchLengthRatio": 1.0
-        //       , "udBranchBranchLengthRatio2": 1.0
-        //       }
-        //       , "imageUrl": "img/specimen02.svg" 
-        //   }
-        // 
-        //   , { "treeParams": { 
-        //           "age": 2
-        //         , "needles": false
-        //         , "udTrunkLengthIncrementPerYear": 1.35
-        //         , "udTrunkBranchLengthRatio": 0.6
-        //         , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
-        //         , "udTrunkGirth": 5.0
-        //         , "udWhorlsPerYear": 4
-        //         , "udWhorlSize": 5
-        //         , "udBranchGirth": 1.0
-        //         , "udBranchBranchLengthRatio": 1.0
-        //         , "udBranchBranchLengthRatio2": 1.0
-        //         }
-        //         , "imageUrl": "img/specimen03.svg" 
-        //     }
-        // 
-        //     , { "treeParams": { 
-        //             "age": 2
-        //           , "needles": false
-        //           , "udTrunkLengthIncrementPerYear": 1.4
-        //           , "udTrunkBranchLengthRatio": 0.65
-        //           , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
-        //           , "udTrunkGirth": 5.0
-        //           , "udWhorlsPerYear": 4
-        //           , "udWhorlSize": 5
-        //           , "udBranchGirth": 1.0
-        //           , "udBranchBranchLengthRatio": 1.0
-        //           , "udBranchBranchLengthRatio2": 1.0
-        //           }
-        //       , "imageUrl": "img/specimen04.svg" 
-        //       }
-        // 
-        //       , { "treeParams": { 
-        //               "age": 2
-        //             , "needles": false
-        //             , "udTrunkLengthIncrementPerYear": 1.35
-        //             , "udTrunkBranchLengthRatio": 0.6
-        //             , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
-        //             , "udTrunkGirth": 5.0
-        //             , "udWhorlsPerYear": 4
-        //             , "udWhorlSize": 5
-        //             , "udBranchGirth": 1.0
-        //             , "udBranchBranchLengthRatio": 1.0
-        //             , "udBranchBranchLengthRatio2": 1.0
-        //             }
-        //         , "imageUrl": "img/specimen05.svg" 
-        //         }
-        // 
-        //         , { "treeParams": { 
-        //                 "age": 2
-        //               , "needles": false
-        //               , "udTrunkLengthIncrementPerYear": 1.4
-        //               , "udTrunkBranchLengthRatio": 0.65
-        //               , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
-        //               , "udTrunkGirth": 5.0
-        //               , "udWhorlsPerYear": 4
-        //               , "udWhorlSize": 5
-        //               , "udBranchGirth": 1.0
-        //               , "udBranchBranchLengthRatio": 1.0
-        //               , "udBranchBranchLengthRatio2": 1.0
-        //               }
-        //           , "imageUrl": "img/specimen06.svg" 
-        //           }
-        // 
-        //       , { "treeParams": { 
-        //               "age": 2
-        //             , "needles": false
-        //             , "udTrunkLengthIncrementPerYear": 1.35
-        //             , "udTrunkBranchLengthRatio": 0.6
-        //             , "udTrunkBranchAngles": [ 0.698, 0.898, 1.31 , 0.967 ]
-        //             , "udTrunkGirth": 5.0
-        //             , "udWhorlsPerYear": 4
-        //             , "udWhorlSize": 5
-        //             , "udBranchGirth": 1.0
-        //             , "udBranchBranchLengthRatio": 1.0
-        //             , "udBranchBranchLengthRatio2": 1.0
-        //             }
-        //         , "imageUrl": "img/specimen07.svg" 
-        //         }
       ];
 
-      insertFunc = function(specimenData) {
+      insertFunc = function(individualData) {
             var i = data.rows.length;
-            data.rows.push({id: i, data: specimenData});
+            data.rows.push({id: i, data: individualData});
             return i;
         };
 
@@ -225,8 +111,8 @@ appServices.factory('Specimens',
             }
         };
         
-      default_specimen_data.forEach(function(specimenData){
-          insertFunc(specimenData);
+      default_individual_data.forEach(function(individualData){
+          insertFunc(individualData);
       });
       
       
@@ -266,7 +152,7 @@ appServices.factory('Specimens',
               mutateFunc(newSpecData);
               return insertFunc(newSpecData);
           }
-          , copySpecimen: copySpecData
+          , copyIndividual: copySpecData
     };
 
   });
@@ -281,9 +167,9 @@ appServices.factory('Lineage',
             init: function() {
                 data = {rows: []};
             }
-            , insertInto: function(specimenId) {
+            , insertInto: function(individualId) {
                   var i = data.rows.length;
-                  data.rows.push({id: i, data: specimenId});
+                  data.rows.push({id: i, data: individualId});
                   return i;
             }
             , deleteID: function(i) {

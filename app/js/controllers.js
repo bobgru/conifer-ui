@@ -4,19 +4,19 @@
 var app = angular.module('myApp.controllers', ['ngResource']);
 
 app.controller('PopulationCtrl', ['$scope', '$rootScope', '$http',
-                                  'Specimens', 'Lineage',
+                                  'Population', 'Lineage',
                
-    function($scope, $rootScope, $http, Specimens, Lineage) {
+    function($scope, $rootScope, $http, Population, Lineage) {
         
-        if (typeof($rootScope.specimenIDs) == "undefined") {
-            $scope.specimenIDs = [0];
-            $rootScope.specimenIDs = [0];
+        if (typeof($rootScope.populationIDs) == "undefined") {
+            $scope.populationIDs = [0];
+            $rootScope.populationIDs = [0];
         } else {
-            $scope.specimenIDs = $rootScope.specimenIDs;
+            $scope.populationIDs = $rootScope.populationIDs;
         }
         
-        $scope.specimens = Specimens.queryIDs($scope.specimenIDs);
-        $rootScope.specimens = $scope.specimens;
+        $scope.population = Population.queryIDs($scope.populationIDs);
+        $rootScope.population = $scope.population;
         
         if (typeof($rootScope.lineage) == "undefined") {
             $scope.lineage = [];
@@ -26,7 +26,7 @@ app.controller('PopulationCtrl', ['$scope', '$rootScope', '$http',
         }
 
         // Just for highlighting parent -- could do it in CSS.
-        $scope.selectedSpecimen = $scope.specimenIDs[0];
+        $scope.selectedIndividual = $scope.populationIDs[0];
         
         // OK if undefined -- nothing to select
         $scope.selectedAncestor = $rootScope.selectedAncestor;
@@ -44,8 +44,8 @@ app.controller('PopulationCtrl', ['$scope', '$rootScope', '$http',
         // Objects in lineage array have form:
         // lineage[0] = {
         //      id: lineage ID
-        //    , data: specimenID
-        //    , specimen: { id: specimenID, data: specimen data }
+        //    , data: individualID
+        //    , individual: { id: individualID, data: individual data }
         // }
         $scope.updateLineage = function(parentSpecID) {
             var linID, linObj, parentSpec;
@@ -53,8 +53,8 @@ app.controller('PopulationCtrl', ['$scope', '$rootScope', '$http',
             linID = Lineage.insertInto(parentSpecID);
             linObj = Lineage.queryID(linID);
             
-            parentSpec = Specimens.queryID(parentSpecID);
-            linObj.specimen = parentSpec;
+            parentSpec = Population.queryID(parentSpecID);
+            linObj.individual = parentSpec;
             
             // The one and only place to initialize and
             // update $scope.lineage and $rootScope.lineage.
@@ -62,19 +62,19 @@ app.controller('PopulationCtrl', ['$scope', '$rootScope', '$http',
             $rootScope.lineage = $scope.lineage;
         }
 
-        var newSpecimen = function(parentSpecID) {
-            var newSpecID = Specimens.reproduce(parentSpecID);
-            var newSpec   = Specimens.queryID(newSpecID);
+        var newIndividual = function(parentSpecID) {
+            var newSpecID = Population.reproduce(parentSpecID);
+            var newSpec   = Population.queryID(newSpecID);
             var setImg = function(spec, data) {
                 spec.data.imageUrl = "img/" + data;
             };
             
-            $scope.specimenIDs.push(newSpecID);
-            $rootScope.specimenIDs = $scope.specimenIDs;
+            $scope.populationIDs.push(newSpecID);
+            $rootScope.populationIDs = $scope.populationIDs;
             
             // post request for drawing, receiving url to image
-            // save url in specimen
-            //newSpec.data.imageUrl = "img/specimen01.svg";
+            // save url in individual
+            //newSpec.data.imageUrl = "img/individual01.svg";
             $scope.drawTree(newSpec.data.treeParams,
                 function(data, status, headers, config){
                     setImg(newSpec, data);
@@ -86,17 +86,17 @@ app.controller('PopulationCtrl', ['$scope', '$rootScope', '$http',
             
             $scope.updateLineage(parentSpecID);
 
-            // Reset specimenIDs starting with new parent.
-            $scope.specimenIDs = [parentSpecID];
-            $rootScope.specimenIDs = $scope.specimenIDs;
+            // Reset populationIDs starting with new parent.
+            $scope.populationIDs = [parentSpecID];
+            $rootScope.populationIDs = $scope.populationIDs;
 
             numKids = 3;
             for (i = 0; i < numKids; ++i) {
-                newSpecimen(parentSpecID);
+                newIndividual(parentSpecID);
             }
 
-            $scope.specimens = Specimens.queryIDs($scope.specimenIDs);
-            $rootScope.specimens = $scope.specimens;
+            $scope.population = Population.queryIDs($scope.populationIDs);
+            $rootScope.population = $scope.population;
         };
 
         $scope.drawTree = function(tp, ok) {
@@ -112,52 +112,52 @@ app.controller('PopulationCtrl', ['$scope', '$rootScope', '$http',
   }]);
   
 app.controller('ViewCtrl', ['$scope', '$routeParams',
-                            'Specimens', 'Lineage',
-    function($scope, $routeParams, Specimens, Lineage) {
+                            'Population', 'Lineage',
+    function($scope, $routeParams, Population, Lineage) {
         // Take the parent if we fail to find the id.
-        // Assumes there is at least one specimen.
-        var match = Specimens.queryID($routeParams.id);
+        // Assumes there is at least one individual.
+        var match = Population.queryID($routeParams.id);
         if (typeof(match) == "undefined") {
             match = Lineage.queryLast; // could return null
         }
         
-        $scope.specimenData = match.data;
+        $scope.individualData = match.data;
         $scope.view = true;
     }]);
   
 app.controller('ExperimentCtrl', ['$scope', '$routeParams',
-                                  'Specimens', 'Lineage',
-    function($scope, $routeParams, Specimens, Lineage) {
+                                  'Population', 'Lineage',
+    function($scope, $routeParams, Population, Lineage) {
         // Take the parent if we fail to find the id.
-        // Assumes there is at least one specimen.
-        var match = Specimens.queryID($routeParams.id);
+        // Assumes there is at least one individual.
+        var match = Population.queryID($routeParams.id);
         if (typeof(match) == "undefined") {
             match = Lineage.queryLast; // could return null
         }
 
-        // Always work on a copy of the specimen.
-        $scope.specimenData = Specimens.copySpecimen(match.data);
+        // Always work on a copy of the individual.
+        $scope.individualData = Population.copyIndividual(match.data);
 
         // Patch the imageUrl back in.
-        $scope.specimenData.imageUrl = match.data.imageUrl;
+        $scope.individualData.imageUrl = match.data.imageUrl;
 
         $scope.view = false;
     }]);
 
 app.controller('AdminCtrl', ['$scope', '$rootScope', '$routeParams',
-                             '$location', '$http', 'Specimens',
-    function($scope, $rootScope, $routeParams, $location, $http, Specimens) {
-        var newSpecimen, drawTree, fetchDrawing;
+                             '$location', '$http', 'Population',
+    function($scope, $rootScope, $routeParams, $location, $http, Population) {
+        var newIndividual, drawTree, fetchDrawing;
         
-        newSpecimen = function(specData) {
-            var newSpecID = Specimens.insertInto(specData);
-            var newSpec   = Specimens.queryID(newSpecID);
+        newIndividual = function(specData) {
+            var newSpecID = Population.insertInto(specData);
+            var newSpec   = Population.queryID(newSpecID);
             var setImg = function(spec, data) {
                 spec.data.imageUrl = "img/" + data;
             };
             
             // post request for drawing, receiving url to image
-            // save url in specimen
+            // save url in individual
             drawTree(newSpec.data.treeParams,
                 function(data, status, headers, config){
                     setImg(newSpec, data);
@@ -172,7 +172,7 @@ app.controller('AdminCtrl', ['$scope', '$rootScope', '$routeParams',
             };
             
             // post request for drawing, receiving url to image
-            // save url in specimen
+            // save url in individual
             drawTree(specData.treeParams,
                 function(data, status, headers, config){
                     setImg(specData, data);
@@ -196,15 +196,15 @@ app.controller('AdminCtrl', ['$scope', '$rootScope', '$routeParams',
         
         // Only available from ExperimentCtrl.
         $scope.test = function() {
-            fetchDrawing($scope.specimenData);
+            fetchDrawing($scope.individualData);
         };
         
         // Only available from ExperimentCtrl.
         $scope.propagate = function() {
-            // Reset lineage and insert specimenData as first item.
-            Specimens.init();
-            var id = newSpecimen($scope.specimenData);
-            $rootScope.specimenIDs = [id];
+            // Reset lineage and insert individualData as first item.
+            Population.init();
+            var id = newIndividual($scope.individualData);
+            $rootScope.populationIDs = [id];
             $rootScope.lineage = [];
             $location.path("/population");
         };

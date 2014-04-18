@@ -11,22 +11,22 @@
 	
 	<table class="table-bordered">
 		<tr ng-repeat=
-			"rowSpecs in [specimens.slice(0,4), specimens.slice(4,8)]">
-			<td ng-repeat="specimen in rowSpecs">
+			"rows in [population.slice(0,4), population.slice(4,8)]">
+			<td ng-repeat="individual in rows">
 				<div>
-					<img ng-src="{{specimen.data.imageUrl}}"
-				     ng-click="selectSpecimen(specimen.id)"
-				     ng-class="{ selected:{{specimen.id == selectedSpecimen}} }">
+					<img ng-src="{{individual.data.imageUrl}}"
+				     ng-click="selectIndividual(individual.id)"
+				     ng-class="{ selected:{{individual.id == selectedIndividual}} }">
 					</img>
 				</div>
 				<div>
 					<button class="btn btn-primary"
-					 		ng-click="nextGeneration(specimen.id)">
+					 		ng-click="nextGeneration(individual.id)">
 						<strong>></strong>
 						<!-- <span class="glyphicon glyphicon-play"></span> -->
 					</button>
 					<a class="btn btn-primary"
-					 	ng-href="#/view/{{specimen.id}}"><tt>i</tt></a>
+					 	ng-href="#/view/{{individual.id}}"><tt>i</tt></a>
 				</div>
 			</td>
 		</tr>
@@ -36,7 +36,7 @@
 		<tr>
 			<td ng-repeat="ancestor in lineage">
 				<a ng-href="#/view/{{ancestor.data}}">
-					<img ng-src="{{ancestor.specimen.data.imageUrl}}"
+					<img ng-src="{{ancestor.individual.data.imageUrl}}"
 				     ng-click="selectAncestor(ancestor.id)"
 				     ng-class="{ selected:{{ancestor.id==selectedAncestor}} }">
 					</img>
@@ -48,5 +48,5 @@
 	<!-- <p>Raw lineage = {{lineageRaw}}</p>
 	<p>Lineage = {{lineage}}</p>
 	<hr>
-	<p>Specimens = {{specimens}}</p> -->
+	<p>Population = {{population}}</p> -->
 </div>
