@@ -31,7 +31,7 @@ app.controller('PopulationCtrl', ['$scope', '$rootScope',
         $scope.lineage = Lineage.query();
 
         // Just for highlighting parent -- could do it in CSS.
-        $scope.selectedIndividual = CurrentPopulation.query()[0];
+        $scope.selectedIndividual = populationIDs[0];
         
         // OK if undefined -- nothing to select
         $scope.selectedAncestor = $rootScope.selectedAncestor;
@@ -47,35 +47,12 @@ app.controller('PopulationCtrl', ['$scope', '$rootScope',
 
 app.controller('PropagationCtrl', ['$http', '$routeParams', '$location',
                                    'Population', 'CurrentPopulation', 'Lineage',
-               
+                                   'Image',
     function($http, $routeParams, $location, 
-            Population, CurrentPopulation, Lineage) {
+            Population, CurrentPopulation, Lineage, Image) {
                 
         var parentID, childID, numKids, i, initChildImage;
-        
-        var initChildImage = function(childID) {
-            var child, getImage, setImage;
-            
-            setImage = function(spec, data) {
-                spec.data.imageUrl = "img/" + data;
-            };
-            
-            getImage = function(tp, ok) {
-                $http({ method : 'POST',
-                        url : 'conifer/draw',
-                        data : 'userdata=' + angular.toJson(tp),
-                        headers: {'Content-Type':
-                            'application/x-www-form-urlencoded'}
-                    }).success(ok);
-            };
-            
-            child = Population.queryID(childID);
-            getImage(child.data.treeParams,
-                function(data, status, headers, config){
-                    setImage(child, data);
-                });
-        };
-        
+
         parentID = $routeParams.id;
         
         Lineage.insertInto(parentID);
@@ -86,7 +63,7 @@ app.controller('PropagationCtrl', ['$http', '$routeParams', '$location',
         for (i = 0; i < numKids; ++i) {
             childID = Population.reproduce(parentID);
             CurrentPopulation.push(childID);
-            initChildImage(childID);
+            Image.getByID(childID);
         }
 
         $location.path('/population');
@@ -110,9 +87,11 @@ app.controller('ViewCtrl', ['$scope', '$routeParams', '$location',
         };
     }]);
   
-app.controller('ExperimentCtrl', ['$scope', '$rootScope', '$routeParams',
-                                  '$location', '$http', 'Population', 'Lineage',
-    function($scope, $rootScope, $routeParams, $location, $http, Population, Lineage) {
+app.controller('ExperimentCtrl', ['$scope', '$routeParams',
+                                  '$location', 'Population',
+                                  'CurrentPopulation', 'Lineage', 'Image',
+    function($scope, $routeParams, $location,
+            Population, CurrentPopulation, Lineage, Image) {
         var newIndividual, drawTree, fetchDrawing;
 
         // Take the parent if we fail to find the id.
@@ -130,59 +109,20 @@ app.controller('ExperimentCtrl', ['$scope', '$rootScope', '$routeParams',
 
         $scope.view = false;
 
-        fetchDrawing = function(specData) {
-            var setImg = function(specData, data) {
-                specData.imageUrl = "img/" + data;
-            };
-            
-            // post request for drawing, receiving url to image
-            // save url in individual
-            drawTree(specData.treeParams,
-                function(data, status, headers, config){
-                    setImg(specData, data);
-                });
-        };
-        
-        drawTree = function(tp, ok) {
-            $http({
-                        method : 'POST',
-                        url : 'conifer/draw',
-                        data : 'userdata=' + angular.toJson(tp),
-                        headers: {'Content-Type':
-                            'application/x-www-form-urlencoded'}
-                    }).success(ok);
-        };
-        
         $scope.test = function() {
-            fetchDrawing($scope.individualData);
-        };
-        
-        newIndividual = function(specData) {
-            var newSpecID = Population.insertInto(specData);
-            var newSpec   = Population.queryID(newSpecID);
-            var setImg = function(spec, data) {
-                spec.data.imageUrl = "img/" + data;
-            };
-            
-            // post request for drawing, receiving url to image
-            // save url in individual
-            drawTree(newSpec.data.treeParams,
-                function(data, status, headers, config){
-                    setImg(newSpec, data);
-                });
-            
-            return newSpecID;
+            Image.get($scope.individualData);
         };
         
         $scope.propagate = function() {
+            var id;
+            
             Lineage.init();
             Population.init();
             CurrentPopulation.init();
-            
-            var id = newIndividual($scope.individualData);
-            CurrentPopulation.push(id);
 
-            $rootScope.lineage = [];
+            id = Population.insertInto($scope.individualData);
+            CurrentPopulation.push(id);
+            Image.getByID(id);
 
             $location.path("/population");
         };

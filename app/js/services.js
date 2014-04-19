@@ -3,8 +3,8 @@
 /* Services */
 
 
-//var appServices = angular.module('myApp.services', ['ngResource']);
-var appServices = angular.module('myApp.services',[]);
+var appServices = angular.module('myApp.services', ['ngResource']);
+//var appServices = angular.module('myApp.services',[]);
 
 // Demonstrate how to register services
 // In this case it is a simple value service.
@@ -229,4 +229,57 @@ appServices.factory('Lineage', [ 'Population',
             }
       };
 }]);
+
+appServices.factory('Image', [ '$http', 'Population', 
+    function($http, Population){
+
+        return {
+            get: function(individualData) {
+                var getImage, setImage;
+
+                setImage = function(specData, data) {
+                    specData.imageUrl = "img/" + data;
+                };
+
+                getImage = function(tp, ok) {
+                    $http({ method : 'POST',
+                            url : 'conifer/draw',
+                            data : 'userdata=' + angular.toJson(tp),
+                            headers: {'Content-Type':
+                                'application/x-www-form-urlencoded'}
+                        }).success(ok);
+                };
+
+                getImage(individualData.treeParams,
+                    function(data, status, headers, config){
+                        setImage(individualData, data);
+                    });
+            }
+            
+            , getByID: function(id) {
+                var individual, individualData, getImage, setImage;
+
+                setImage = function(specData, data) {
+                    specData.imageUrl = "img/" + data;
+                };
+
+                getImage = function(tp, ok) {
+                    $http({ method : 'POST',
+                            url : 'conifer/draw',
+                            data : 'userdata=' + angular.toJson(tp),
+                            headers: {'Content-Type':
+                                'application/x-www-form-urlencoded'}
+                        }).success(ok);
+                };
+
+                individual = Population.queryID(id);
+                individualData = individual.data;
+                getImage(individualData.treeParams,
+                    function(data, status, headers, config){
+                        setImage(individualData, data);
+                    });
+            }
+            
+        };
+    }]);
 

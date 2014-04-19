@@ -6,72 +6,104 @@ describe('controllers', function(){
   beforeEach(module('myApp.controllers'));
   beforeEach(module('myApp.services'));
 
-  describe('EvoCtrl', function() {
-      var $scope, $rootScope, createController;
-      var specimens, spec0, spec1, lineage, lineageRaw;
+  describe('PopulationCtrl', function() {
+      var $scope, $rootScope, $controller, controller, createController,
+          populationIDs, population, individual0, individual1, lineage;
       
       beforeEach(inject(function($injector){
-          $rootScope = $injector.get('$rootScope');
-          $scope     = $rootScope.$new();
-          
-          var $controller = $injector.get('$controller');
+          $rootScope  = $injector.get('$rootScope');
+          $controller = $injector.get('$controller');
+
+          $scope      = $rootScope.$new();
 
           createController = function() {
-              return $controller('EvoCtrl', {
+              return $controller('PopulationCtrl', {
                   '$scope': $scope
               });
           };
           
-          specimens = [spec0, spec1];
-          spec0 = {id:0, data:{treeParams:{}, imageUrl:"foo.svg"}};
-          spec1 = {id:1, data:{treeParams:{}, imageUrl:"bar.svg"}};
-          
+          population = [individual0, individual1];
+          individual0 = {id:0, data:{treeParams:{}, imageUrl:"foo.svg"}};
+          individual1 = {id:1, data:{treeParams:{}, imageUrl:"bar.svg"}};          
+      }));
+      
+      it('should have empty lineage', inject(function(Population,CurrentPopulation,Lineage) {
+          populationIDs = [0];
           lineage = [];
-      }));
-      
-      it('should have empty lineage', inject(function(Specimens,Lineage) {
-          spyOn(Specimens, 'queryAll').andReturn(specimens);
-          spyOn(Specimens, 'queryID').andReturn(spec0);
-          spyOn(Lineage, 'queryAll').andReturn(lineage);
+          
+          spyOn(CurrentPopulation, 'query').andReturn(populationIDs);
+          spyOn(CurrentPopulation, 'push');
+          spyOn(Population, 'queryAll').andReturn(population);
+          spyOn(Lineage, 'query').andReturn(lineage);
      
-          var controller = createController();
-          expect($scope.lineage).toEqual([]);
+          controller = createController();
+          expect($scope.lineage).toEqual(lineage);
+          expect($scope.selectedAncestor).not.toBeDefined();
+          expect(CurrentPopulation.push).not.toHaveBeenCalled();
       }));
+
+      it('should have one ancestor in lineage', inject(function(Population,CurrentPopulation,Lineage) {
+          populationIDs = [0, 1];
+          lineage = [{id:0, data:1, individual:individual1}];
+          
+          spyOn(CurrentPopulation, 'query').andReturn(populationIDs);
+          spyOn(CurrentPopulation, 'push');
+          spyOn(Population, 'queryAll').andReturn(population);
+          spyOn(Lineage, 'query').andReturn(lineage);
+     
+          controller = createController();
+          expect($scope.lineage).toEqual(lineage);
+          expect($scope.selectedAncestor).not.toBeDefined();
+          expect(CurrentPopulation.push).not.toHaveBeenCalled();
+          
+          expect($scope.selectAncestor).toBeDefined();
+          $scope.selectAncestor(1);
+          expect($scope.selectedAncestor).toEqual(1);
+          expect($rootScope.selectedAncestor).toEqual(1);
+      }));
+  });
+
+
+  xdescribe('PropagationCtrl', function() {
+        var $controller, controller, createController, populationIDs,
+            routeParams;
+        
+    
+        beforeEach(inject(function($injector){
+            $controller  = $injector.get('$controller');
+            routeParams  = $injector.get('$routeParams');
+
+            createController = function() {
+                return $controller('PropagationCtrl', {
+                    //'$scope': $scope
+                });
+            };
+        }));
+    
       
       
-      // This test throws an exception at the call to nextGeneration, which
-      // is undefined, because the controller object hasn't been created
-      // corrrectly, as witnessed in the debugger.
-      
-      // it('should have one ancestor in lineage', inject(function(Specimens,Lineage) {
-      //     var ancestor, lineageState;
-      //     spyOn(Specimens, 'queryAll').andReturn(specimens);
-      //     spyOn(Specimens, 'queryID').andReturn(spec1);
-      //     
-      //     lineageState = 0;
-      //     ancestor = {id:0, data:1};
-      //     lineageRaw = [ancestor];
-      //     lineage = [{id:0, data:1, specimen:spec1}];
-      //     spyOn(Lineage, 'queryAll').andCallFake(function() {
-      //         switch (lineageState) {
-      //             case 0: 
-      //               return [];
-      //             case 1:
-      //               return lineage;
-      //         }
-      //     });
-      //     spyOn(Lineage, 'insertInto').andCallFake(function() {
-      //         lineageState = 1;
-      //         return 0;
-      //     });
-      //      
-      //     var controller = createController();
-      //     expect($scope.lineage).toEqual([]);
-      // 
-      //     controller.nextGeneration(1);
-      //     expect($scope.lineageRaw).toEqual(lineageRaw);
-      //     
-      // }));
+      it('should have increased population size by 3',
+       inject(function(Population,CurrentPopulation,Lineage,Image) {
+          var nextChildID;
+          populationIDs = [];
+          //spyOn($routeParams, 'id').andReturn(1);
+          spyOn(Lineage, 'insertInto');
+          spyOn(CurrentPopulation, 'init');
+          spyOn(CurrentPopulation, 'push').andCallFake(function(id){populationIDs.push(id);});
+
+          nextChildID = 2;
+          spyOn(Population, 'reproduce').andCallFake(function(id){ return nextChildID++; });
+          spyOn(Image, 'get');
+          //spyOn($location, 'path');
+          
+          var controller = createController();
+          
+          expect(Lineage.insertInto).toBeCalledWith(1);
+          expect(CurrentPopulation.init).toBeCalled();
+          expect(populationIDs).toEqual([1,2,3,4]);
+          expect(Image.get).toBeCalled();
+          //expect($location.path).toBeCalledWith('/population');
+      }));
       
   });
 });
