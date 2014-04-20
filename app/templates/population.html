@@ -13,10 +13,11 @@
 		<tr>
 			<td ng-repeat="individual in population">
 				<div>
-					<img ng-src="{{individual.data.imageUrl}}"
-				     ng-click="selectIndividual(individual.id)"
-				     ng-class="{ selected:{{individual.id == selectedIndividual}} }">
-					</img>
+					<a ng-href="#/view/{{individual.id}}">
+						<img ng-src="{{individual.data.imageUrl}}"
+						     ng-class="{ selected:{{$index == 0}} }">
+						</img>
+					</a>
 				</div>
 				<div>
 					<a class="btn btn-primary"
@@ -24,8 +25,8 @@
 						<strong>></strong>
 						<!-- <span class="glyphicon glyphicon-play"></span> -->
 					</a>
-					<a class="btn btn-primary"
-					 	ng-href="#/view/{{individual.id}}"><tt>i</tt></a>
+					<!-- <a class="btn btn-primary"
+										 	ng-href="#/view/{{individual.id}}"><tt>i</tt></a> -->
 				</div>
 			</td>
 		</tr>

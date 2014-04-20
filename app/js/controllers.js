@@ -45,10 +45,10 @@ app.controller('PopulationCtrl', ['$scope', '$rootScope',
   }]);
 
 
-app.controller('PropagationCtrl', ['$http', '$routeParams', '$location',
+app.controller('PropagationCtrl', ['$routeParams', '$location',
                                    'Population', 'CurrentPopulation', 'Lineage',
                                    'Image',
-    function($http, $routeParams, $location, 
+    function($routeParams, $location, 
             Population, CurrentPopulation, Lineage, Image) {
                 
         var parentID, childID, numKids, i, initChildImage;
@@ -130,7 +130,6 @@ app.controller('ExperimentCtrl', ['$scope', '$routeParams',
         $scope.destroy = function() {
             $location.path("/view/" + $routeParams.id);
         };
-        
     }]);
 
 app.controller('AdminCtrl', [
