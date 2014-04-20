@@ -10,63 +10,56 @@ var app = angular.module('myApp.controllers', ['ngResource']);
 
 app.controller('PopulationCtrl', ['$scope', '$rootScope', 
                                   'Population', 'CurrentPopulation', 'Lineage',
+                                  'Image',
                                   
-    function($scope, $rootScope, Population, CurrentPopulation, Lineage) {
+    function($scope, $rootScope, Population, CurrentPopulation, Lineage, Image) {
         
         /*
             $scope
                 population
                 lineage
                 selectedAncestor
-                selectedIndividual
         */
-        var populationIDs;
+        var initScope;
 
-        populationIDs = CurrentPopulation.query();
-        if (populationIDs.length == 0) {
-            CurrentPopulation.push(0);
+        initScope = function() {
+            var populationIDs;
+            
             populationIDs = CurrentPopulation.query();
+            if (populationIDs.length == 0) {
+                CurrentPopulation.push(0);
+                populationIDs = CurrentPopulation.query();
+            }
+            $scope.population = Population.queryIDs(populationIDs);
+            $scope.lineage = Lineage.query();
+
+            // OK if undefined -- nothing to select
+            $scope.selectedAncestor = $rootScope.selectedAncestor;
         }
-        $scope.population = Population.queryIDs(populationIDs);
-        $scope.lineage = Lineage.query();
-
-        // Just for highlighting parent -- could do it in CSS.
-        $scope.selectedIndividual = populationIDs[0];
-        
-        // OK if undefined -- nothing to select
-        $scope.selectedAncestor = $rootScope.selectedAncestor;
-
-        //$scope.svgTest = "To be replaced by result of POST";
 
         $scope.selectAncestor = function (linId) {
            $scope.selectedAncestor = linId;
            $rootScope.selectedAncestor = linId;
         };
-  }]);
-
-
-app.controller('PropagationCtrl', ['$routeParams', '$location',
-                                   'Population', 'CurrentPopulation', 'Lineage',
-                                   'Image',
-    function($routeParams, $location, 
-            Population, CurrentPopulation, Lineage, Image) {
-                
-        var parentID, childID, numKids, i, initChildImage;
-
-        parentID = $routeParams.id;
         
-        Lineage.insertInto(parentID);
-        CurrentPopulation.init();
-        CurrentPopulation.push(parentID);
+        $scope.propagate = function(parentID) {
+            var childID, numKids, i;
 
-        numKids = 3;
-        for (i = 0; i < numKids; ++i) {
-            childID = Population.reproduce(parentID);
-            CurrentPopulation.push(childID);
-            Image.getByID(childID);
-        }
+            Lineage.insertInto(parentID);
+            CurrentPopulation.init();
+            CurrentPopulation.push(parentID);
 
-        $location.path('/population');
+            numKids = 7;
+            for (i = 0; i < numKids; ++i) {
+                childID = Population.reproduce(parentID);
+                CurrentPopulation.push(childID);
+                Image.getByID(childID);
+            }
+            
+            initScope();
+        };
+        
+        initScope();
   }]);
 
 app.controller('ViewCtrl', ['$scope', '$routeParams', '$location', 

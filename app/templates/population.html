@@ -15,16 +15,16 @@
 				<div>
 					<a ng-href="#/view/{{individual.id}}">
 						<img ng-src="{{individual.data.imageUrl}}"
-						     ng-class="{ selected:{{$index == 0}} }">
+							 ng-class="{ selected:{{$index == 0}} }">
 						</img>
 					</a>
 				</div>
 				<div>
-					<a class="btn btn-primary"
-					 		ng-href="#/propagate/{{individual.id}}">
+					<button class="btn btn-primary propagate"
+					 		ng-click="propagate(individual.id)">
 						<strong>></strong>
 						<!-- <span class="glyphicon glyphicon-play"></span> -->
-					</a>
+					</button>
 					<!-- <a class="btn btn-primary"
 										 	ng-href="#/view/{{individual.id}}"><tt>i</tt></a> -->
 				</div>
@@ -35,7 +35,7 @@
 	<table class="table-bordered">
 		<tr>
 			<td ng-repeat="ancestor in lineage">
-				<a ng-href="#/view/{{ancestor.data}}">
+				<a ng-href="#/view/{{ancestor.data}}" class="ancestor">
 					<img ng-src="{{ancestor.individual.data.imageUrl}}"
 				     ng-click="selectAncestor(ancestor.id)"
 				     ng-class="{ selected:{{ancestor.id==selectedAncestor}} }">
