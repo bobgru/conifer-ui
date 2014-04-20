@@ -5,6 +5,9 @@
 describe('controllers', function(){
   beforeEach(module('myApp.controllers'));
   beforeEach(module('myApp.services'));
+  beforeEach(module('ngRoute'));
+  beforeEach(module('ngResource'));
+  
 
   describe('PopulationCtrl', function() {
       var $scope, $rootScope, $controller, controller, createController,
@@ -97,4 +100,34 @@ describe('controllers', function(){
           expect($scope.selectedAncestor).not.toBeDefined();
       }));
   });
+  
+  describe('ViewCtrl', function() {
+      var $scope, $rootScope, $controller, controller, createController,
+          individual0;
+      
+      beforeEach(inject(function($injector){
+          $rootScope  = $injector.get('$rootScope');
+          $controller = $injector.get('$controller');
+
+          $scope      = $rootScope.$new();
+
+          createController = function() {
+              return $controller('ViewCtrl', {
+                  '$scope': $scope
+              });
+          };
+          
+          individual0 = {id:0, data:{treeParams:{}, imageUrl:"foo.svg"}};
+      }));
+      
+      it('should get data for individual', inject(function(Population,Lineage) {
+          spyOn(Population, 'queryID').andReturn(individual0);
+          spyOn(Lineage, 'queryLast').andReturn(individual0);
+     
+          controller = createController();
+          expect($scope.view).toEqual(true);
+          expect($scope.individualData).toEqual(individual0.data);
+      }));
+  });
+  
 });
