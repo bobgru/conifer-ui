@@ -61,49 +61,37 @@ describe('controllers', function(){
           expect($scope.selectedAncestor).toEqual(1);
           expect($rootScope.selectedAncestor).toEqual(1);
       }));
-  });
 
-
-  xdescribe('PropagationCtrl', function() {
-        var $controller, controller, createController, populationIDs,
-            routeParams;
-        
-    
-        beforeEach(inject(function($injector){
-            $controller  = $injector.get('$controller');
-            routeParams  = $injector.get('$routeParams');
-
-            createController = function() {
-                return $controller('PropagationCtrl', {
-                    //'$scope': $scope
-                });
-            };
-        }));
-    
-      
-      
-      it('should have increased population size by 3',
+      it('should have increased population size by 7',
        inject(function(Population,CurrentPopulation,Lineage,Image) {
-          var nextChildID;
-          populationIDs = [];
-          //spyOn($routeParams, 'id').andReturn(1);
-          spyOn(Lineage, 'insertInto');
-          spyOn(CurrentPopulation, 'init');
+          var nextChildID, populationIDs, population;
+          
+          // For this test, we are faking individuals as simple integers.
+          lineage = [];
+          populationIDs = [0,1];
+          population = [0,1];
+          spyOn(Lineage, 'insertInto').andCallFake(function(id){lineage.push(id);});
+          spyOn(CurrentPopulation, 'init').andCallFake(function(){populationIDs = [];});
           spyOn(CurrentPopulation, 'push').andCallFake(function(id){populationIDs.push(id);});
+          spyOn(CurrentPopulation, 'query').andCallFake(function(){return populationIDs;});
+          spyOn(Population, 'queryIDs').andCallFake(function(){return populationIDs;});
+          spyOn(Lineage, 'query').andReturn(lineage);
 
           nextChildID = 2;
           spyOn(Population, 'reproduce').andCallFake(function(id){ return nextChildID++; });
-          spyOn(Image, 'get');
-          //spyOn($location, 'path');
-          
+          spyOn(Image, 'getByID');
+
           var controller = createController();
-          
-          expect(Lineage.insertInto).toBeCalledWith(1);
-          expect(CurrentPopulation.init).toBeCalled();
-          expect(populationIDs).toEqual([1,2,3,4]);
-          expect(Image.get).toBeCalled();
-          //expect($location.path).toBeCalledWith('/population');
+          $scope.propagate(1);
+
+          expect(Lineage.insertInto).toHaveBeenCalledWith(1);
+          expect(CurrentPopulation.init).toHaveBeenCalled();
+          expect(populationIDs).toEqual([1,2,3,4,5,6,7,8]);
+          expect(Image.getByID).toHaveBeenCalled();
+
+          expect($scope.population).toEqual([1,2,3,4,5,6,7,8]);
+          expect($scope.lineage).toEqual([1]);
+          expect($scope.selectedAncestor).not.toBeDefined();
       }));
-      
   });
 });
