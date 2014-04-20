@@ -64,31 +64,34 @@ describe('controllers', function(){
 
       it('should have increased population size by 7',
        inject(function(Population,CurrentPopulation,Lineage,Image) {
-          var nextChildID, populationIDs, population;
+          var controller, nextChildID, populationIDs, population;
           
           // For this test, we are faking individuals as simple integers.
+
           lineage = [];
-          populationIDs = [0,1];
-          population = [0,1];
           spyOn(Lineage, 'insertInto').andCallFake(function(id){lineage.push(id);});
+          spyOn(Lineage, 'query').andReturn(lineage);
+
+          populationIDs = [0,1];
           spyOn(CurrentPopulation, 'init').andCallFake(function(){populationIDs = [];});
           spyOn(CurrentPopulation, 'push').andCallFake(function(id){populationIDs.push(id);});
           spyOn(CurrentPopulation, 'query').andCallFake(function(){return populationIDs;});
-          spyOn(Population, 'queryIDs').andCallFake(function(){return populationIDs;});
-          spyOn(Lineage, 'query').andReturn(lineage);
 
+          population = [0,1];
           nextChildID = 2;
+          spyOn(Population, 'queryIDs').andCallFake(function(){return populationIDs;});
           spyOn(Population, 'reproduce').andCallFake(function(id){ return nextChildID++; });
+
           spyOn(Image, 'getByID');
 
-          var controller = createController();
+          controller = createController();
           $scope.propagate(1);
 
           expect(Lineage.insertInto).toHaveBeenCalledWith(1);
           expect(CurrentPopulation.init).toHaveBeenCalled();
-          expect(populationIDs).toEqual([1,2,3,4,5,6,7,8]);
           expect(Image.getByID).toHaveBeenCalled();
 
+          expect(populationIDs).toEqual([1,2,3,4,5,6,7,8]);
           expect($scope.population).toEqual([1,2,3,4,5,6,7,8]);
           expect($scope.lineage).toEqual([1]);
           expect($scope.selectedAncestor).not.toBeDefined();
