@@ -43,7 +43,7 @@ app.controller('PopulationCtrl', ['$scope', '$rootScope',
         };
         
         $scope.propagate = function(parentID) {
-            var childID, numKids, i;
+            var childID, child, numKids, i;
 
             Lineage.insertInto(parentID);
             CurrentPopulation.init();
@@ -52,8 +52,11 @@ app.controller('PopulationCtrl', ['$scope', '$rootScope',
             numKids = 7;
             for (i = 0; i < numKids; ++i) {
                 childID = Population.reproduce(parentID);
+                child = Population.queryID(childID);
                 CurrentPopulation.push(childID);
+
                 Image.getByID(childID);
+                child.data.dirty = false;
             }
             
             initScope();
@@ -85,11 +88,20 @@ app.controller('ExperimentCtrl', ['$scope', '$routeParams',
                                   'CurrentPopulation', 'Lineage', 'Image',
     function($scope, $routeParams, $location,
             Population, CurrentPopulation, Lineage, Image) {
-        var newIndividual, drawTree, fetchDrawing;
+
+        var newIndividual, drawTree, fetchDrawing,
+            match, setDirtyBit;
+
+        setDirtyBit = function(newVal, oldVal) {
+            // console.log('sDB: $scope.individualData.treeParams.age = ' +
+            //              $scope.individualData.treeParams.age);
+            if (newVal != oldVal) {
+                $scope.individualData.dirty = true;
+            }};
 
         // Take the parent if we fail to find the id.
         // Assumes there is at least one individual.
-        var match = Population.queryID($routeParams.id);
+        match = Population.queryID($routeParams.id);
         if (typeof(match) == "undefined") {
             match = Lineage.queryLast; // could return null
         }
@@ -99,23 +111,34 @@ app.controller('ExperimentCtrl', ['$scope', '$routeParams',
 
         // Patch the imageUrl back in.
         $scope.individualData.imageUrl = match.data.imageUrl;
+        $scope.individualData.dirty = false;
 
         $scope.view = false;
 
+        // Must call $digest to enable the $watch to see changes from initial values.
+        $scope.$watch('individualData.treeParams', setDirtyBit, true);
+        $scope.$digest();
+
         $scope.test = function() {
             Image.get($scope.individualData);
+            $scope.individualData.dirty = false;
         };
         
         $scope.propagate = function() {
             var id;
             
+            // Destroy the world.
             Lineage.init();
             Population.init();
             CurrentPopulation.init();
 
+            // Start over with the new sire.
             id = Population.insertInto($scope.individualData);
             CurrentPopulation.push(id);
-            Image.getByID(id);
+            if ($scope.individualData.dirty) {
+                Image.getByID(id);
+                $scope.individualData.dirty = false;
+            }
 
             $location.path("/population");
         };
@@ -124,9 +147,3 @@ app.controller('ExperimentCtrl', ['$scope', '$routeParams',
             $location.path("/view/" + $routeParams.id);
         };
     }]);
-
-app.controller('AdminCtrl', [
-    function() {
-        
-    }]);
-  

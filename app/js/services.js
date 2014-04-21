@@ -34,7 +34,8 @@ appServices.factory('Population',
               , "udBranchBranchLengthRatio": 1.0
               , "udBranchBranchLengthRatio2": 1.0
               }
-              , "imageUrl": "img/specimen00.svg" 
+              , "imageUrl": "img/specimen00.svg"
+              , "dirty": false
           }
       ];
 
@@ -58,6 +59,7 @@ appServices.factory('Population',
             var newSpecData = {};
             newSpecData.treeParams = copyTreeParams(specData.treeParams);
             newSpecData.imageUrl = "";
+            newSpecData.dirty = true;
             return newSpecData;
         };
         
@@ -103,11 +105,13 @@ appServices.factory('Population',
                     specData.treeParams.udTrunkBranchAngles.length);
                 pct = randomPercent(0.2);
                 specData.treeParams.udTrunkBranchAngles[index] *= pct;
+                specData.dirty = true;
             }
             else if (key != "age" && key != "needles") {
                 // specData.treeParams.udTrunkLengthIncrementPerYear *= 1.1;
                 pct = randomPercent(0.2);
                 specData.treeParams[key] *= pct;
+                specData.dirty = true;
             }
         };
         
@@ -121,17 +125,7 @@ appServices.factory('Population',
               data = {rows: []};
           }
           , insertInto: insertFunc
-          
-          , deleteID: function(i) {
-              // find element of data.rows with id = i, slice it out
-              
-          }
-          , updateID: function(i, obj) {
-              // find element of data.rows with id = i, replace data w/ obj
-              
-          }
           , queryID: queryIDFunc
-          
           , queryIDs: function(ids) {
               var result = [];
               ids.forEach(function(id){
@@ -142,9 +136,6 @@ appServices.factory('Population',
               });
               return result;
           }
-          , queryAll: function() {
-              return data.rows; // Returning alias!
-          }
           , reproduce: function(parentID) {
               var parentSpec, newSpecData;
               parentSpec = queryIDFunc(parentID);
@@ -154,7 +145,6 @@ appServices.factory('Population',
           }
           , copyIndividual: copySpecData
     };
-
   });
 
 appServices.factory('CurrentPopulation',
@@ -197,14 +187,6 @@ appServices.factory('Lineage', [ 'Population',
                   
                   return linID;
             }
-            , deleteID: function(i) {
-                // find element of data.rows with id = i, slice it out
-
-            }
-            , updateID: function(i, obj) {
-                // find element of data.rows with id = i, replace data w/ obj
-
-            }
             , queryID: function(id) {
                 var match;
                 data.rows.forEach(function(item){
@@ -213,9 +195,6 @@ appServices.factory('Lineage', [ 'Population',
                     }
                 });
                 return match;
-            }
-            , queryIDs: function(ids) {
-                // find the elements of data.rows for the ids and return
             }
             , queryLast: function() {
                 if (data.rows.length > 0) {

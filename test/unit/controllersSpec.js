@@ -2,7 +2,7 @@
 
 /* jasmine specs for controllers go here */
 
-describe('controllers', function(){
+describe('Controller', function(){
   beforeEach(module('myApp.controllers'));
   beforeEach(module('myApp.services'));
   beforeEach(module('ngRoute'));
@@ -25,65 +25,108 @@ describe('controllers', function(){
               });
           };
           
-          population = [individual0, individual1];
-          individual0 = {id:0, data:{treeParams:{}, imageUrl:"foo.svg"}};
-          individual1 = {id:1, data:{treeParams:{}, imageUrl:"bar.svg"}};          
+          individual0 = {id:0, data:{treeParams:{}, imageUrl:"foo.svg", dirty: false}};
+          individual1 = {id:1, data:{treeParams:{}, imageUrl:"bar.svg", dirty: false}};          
       }));
       
       it('should have empty lineage', inject(function(Population,CurrentPopulation,Lineage) {
           populationIDs = [0];
+          population = [individual0];
           lineage = [];
           
           spyOn(CurrentPopulation, 'query').andReturn(populationIDs);
           spyOn(CurrentPopulation, 'push');
-          spyOn(Population, 'queryAll').andReturn(population);
+          spyOn(Population, 'queryIDs').andReturn(population);
           spyOn(Lineage, 'query').andReturn(lineage);
      
           controller = createController();
-          expect($scope.lineage).toEqual(lineage);
-          expect($scope.selectedAncestor).not.toBeDefined();
+
+          // Verify no individuals were added to population.
           expect(CurrentPopulation.push).not.toHaveBeenCalled();
+
+          // Check the scope variables.
+          expect($scope.lineage).toEqual(lineage);
+          expect($scope.population).toEqual(population);
+          expect($scope.selectedAncestor).not.toBeDefined();
+          
+          // Fetching the current population doesn't invalidate images.
+          expect($scope.population[0].data.dirty).toEqual(false);
       }));
 
       it('should have one ancestor in lineage', inject(function(Population,CurrentPopulation,Lineage) {
           populationIDs = [0, 1];
+          population = [individual0, individual1];
           lineage = [{id:0, data:1, individual:individual1}];
           
           spyOn(CurrentPopulation, 'query').andReturn(populationIDs);
           spyOn(CurrentPopulation, 'push');
-          spyOn(Population, 'queryAll').andReturn(population);
+          spyOn(Population, 'queryIDs').andReturn(population);
           spyOn(Lineage, 'query').andReturn(lineage);
      
           controller = createController();
-          expect($scope.lineage).toEqual(lineage);
-          expect($scope.selectedAncestor).not.toBeDefined();
-          expect(CurrentPopulation.push).not.toHaveBeenCalled();
           
+          // Verify no individuals were added to population.
+          expect(CurrentPopulation.push).not.toHaveBeenCalled();
+
+          // Check the scope variables.
+          expect($scope.lineage).toEqual(lineage);
+          expect($scope.population).toEqual(population);
+          expect($scope.selectedAncestor).not.toBeDefined();
           expect($scope.selectAncestor).toBeDefined();
+
           $scope.selectAncestor(1);
           expect($scope.selectedAncestor).toEqual(1);
           expect($rootScope.selectedAncestor).toEqual(1);
+
+          // Selecting ancestor doesn't invalidate images.
+          expect($scope.population[0].data.dirty).toEqual(false);
+          expect($scope.population[1].data.dirty).toEqual(false);
       }));
 
       it('should have increased population size by 7',
        inject(function(Population,CurrentPopulation,Lineage,Image) {
-          var controller, nextChildID, populationIDs, population;
+          var controller, nextChildID, children;
           
-          // For this test, we are faking individuals as simple integers.
+          populationIDs = [0,1];
+          population = [individual0, individual1];
+          nextChildID = 2;
+
+          children = [
+              {id:2, data:{treeParams:{}, imageUrl:"bar.svg", dirty: false}}
+            , {id:3, data:{treeParams:{}, imageUrl:"bar.svg", dirty: false}}
+            , {id:4, data:{treeParams:{}, imageUrl:"bar.svg", dirty: false}}
+            , {id:5, data:{treeParams:{}, imageUrl:"bar.svg", dirty: false}}
+            , {id:6, data:{treeParams:{}, imageUrl:"bar.svg", dirty: false}}
+            , {id:7, data:{treeParams:{}, imageUrl:"bar.svg", dirty: false}}
+            , {id:8, data:{treeParams:{}, imageUrl:"bar.svg", dirty: false}}
+          ];
 
           lineage = [];
+
+          // Faking lineage as array of integers.
           spyOn(Lineage, 'insertInto').andCallFake(function(id){lineage.push(id);});
           spyOn(Lineage, 'query').andReturn(lineage);
 
-          populationIDs = [0,1];
           spyOn(CurrentPopulation, 'init').andCallFake(function(){populationIDs = [];});
           spyOn(CurrentPopulation, 'push').andCallFake(function(id){populationIDs.push(id);});
           spyOn(CurrentPopulation, 'query').andCallFake(function(){return populationIDs;});
 
-          population = [0,1];
-          nextChildID = 2;
-          spyOn(Population, 'queryIDs').andCallFake(function(){return populationIDs;});
-          spyOn(Population, 'reproduce').andCallFake(function(id){ return nextChildID++; });
+          // Individuals in population need to have dirty bits for testing.
+          spyOn(Population, 'queryIDs').andCallFake(function(){return population;});
+          spyOn(Population, 'queryID').andCallFake(function(id){
+              var result;
+              result = null;
+              population.forEach(function(individual) {
+                  if (individual.id == id)
+                    result = individual;
+              });
+              return result;
+            });
+          spyOn(Population, 'reproduce').andCallFake(function(id){
+              var child = children[-2 + nextChildID++];
+              population.push(child);
+              return child.id;
+            });
 
           spyOn(Image, 'getByID');
 
@@ -94,10 +137,18 @@ describe('controllers', function(){
           expect(CurrentPopulation.init).toHaveBeenCalled();
           expect(Image.getByID).toHaveBeenCalled();
 
-          expect(populationIDs).toEqual([1,2,3,4,5,6,7,8]);
-          expect($scope.population).toEqual([1,2,3,4,5,6,7,8]);
+          // Check scope variables.
           expect($scope.lineage).toEqual([1]);
+          expect($scope.population.map(function(individual) {
+              return individual.id;
+          })).toEqual([0, 1,2,3,4,5,6,7,8]);
           expect($scope.selectedAncestor).not.toBeDefined();
+          
+          // Verify that no dirty bits are set.
+          // TODO: should fold with "and" and check the result is false.
+          expect($scope.population.map(function(individual) {
+              return individual.data.dirty;
+          })).toEqual([false, false, false, false, false, false, false, false, false]);
       }));
   });
   
@@ -117,7 +168,7 @@ describe('controllers', function(){
               });
           };
           
-          individual0 = {id:0, data:{treeParams:{}, imageUrl:"foo.svg"}};
+          individual0 = {id:0, data:{treeParams:{}, imageUrl:"foo.svg", dirty: false}};
       }));
       
       it('should get data for individual', inject(function(Population,Lineage) {
@@ -127,6 +178,7 @@ describe('controllers', function(){
           controller = createController();
           expect($scope.view).toEqual(true);
           expect($scope.individualData).toEqual(individual0.data);
+          expect($scope.individualData.dirty).toEqual(false);
       }));
 
       it('.experiment should go to ExperimentCtrl',
@@ -143,6 +195,9 @@ describe('controllers', function(){
           expect($location.path).toHaveBeenCalledWith('/experiment/0')
           expect($scope.view).toEqual(true);
           expect($scope.individualData).toEqual(individual0.data);
+
+          // Nothing has changed yet, so the dirty bit should be false.
+          expect($scope.individualData.dirty).toEqual(false);
       }));
   });
   
@@ -162,8 +217,8 @@ describe('controllers', function(){
               });
           };
           
-          individual0 = {id:0, data:{treeParams:{ foo:"bar"}, imageUrl:"foo.svg"}};
-          individual1 = {id:1, data:{treeParams:{ foo:"bar"}, imageUrl:""}};
+          individual0 = {id:0, data:{treeParams:{ age: 1, foo:"bar"}, imageUrl:"foo.svg", dirty:false}};
+          individual1 = {id:1, data:{treeParams:{ age: 1, foo:"bar"}, imageUrl:"", dirty:true}};
       }));
       
       it('should copy data for individual', inject(function(Population,Lineage) {
@@ -175,6 +230,34 @@ describe('controllers', function(){
           expect($scope.view).toEqual(false);
           expect($scope.individualData.treeParams).toEqual(individual1.data.treeParams);
           expect($scope.individualData.imageUrl).toEqual("foo.svg");
+
+          // Nothing has changed yet, so the dirty bit should be false.
+          expect($scope.individualData.dirty).toEqual(false);
+      }));
+
+      it('should set dirty bit on change of treeParams', inject(function(Population,Lineage) {
+          spyOn(Population, 'queryID').andReturn(individual0);
+          spyOn(Population, 'copyIndividual').andReturn(individual1.data);
+          spyOn(Lineage, 'queryLast').andReturn(individual0);
+     
+          controller = createController();
+          
+          // Nothing changed yet, so dirty bit should be false.
+          expect($scope.individualData.dirty).toEqual(false);
+
+          $scope.individualData.treeParams.age += 1;
+          $scope.$digest();
+          
+          // console.log('cS post-digest: $scope.individualData.treeParams.age = ' +
+          //              $scope.individualData.treeParams.age);
+
+          expect($scope.view).toEqual(false);
+          expect($scope.individualData.treeParams).toEqual(individual1.data.treeParams);
+          expect($scope.individualData.treeParams.age).toEqual(2);
+          expect($scope.individualData.imageUrl).toEqual("foo.svg");
+
+          // The treeParams watcher should have set the dirty bit.
+          expect($scope.individualData.dirty).toEqual(true);
       }));
 
       it('.test should update imageUrl', inject(function(Population,Lineage,Image) {
@@ -186,9 +269,16 @@ describe('controllers', function(){
           });
      
           controller = createController();
+
+          // Set the dirty bit to indicate some change has happened to parameters.
+          $scope.individualData.dirty = true;
+
           $scope.test();
+
+          // The new imageUrl should be there and the dirty bit should have been cleared.
           expect(Image.get).toHaveBeenCalled();
           expect($scope.individualData.imageUrl).toEqual("zot.svg");
+          expect($scope.individualData.dirty).toEqual(false);
       }));
 
       it('.destroy should return to ViewCtrl', 
@@ -206,7 +296,9 @@ describe('controllers', function(){
      
           controller = createController();
           $scope.destroy();
+
           expect($location.path).toHaveBeenCalledWith("/view/1");
+          expect($scope.individualData.dirty).toEqual(false);
       }));
 
       it('.propagate should reinitialize population and lineage',
@@ -228,12 +320,14 @@ describe('controllers', function(){
      
           controller = createController();
           $scope.propagate();
+
           expect(Lineage.init).toHaveBeenCalled();
           expect(Population.init).toHaveBeenCalled();
           expect(CurrentPopulation.init).toHaveBeenCalled();
           expect(Population.insertInto).toHaveBeenCalledWith(individual1.data);
           expect(CurrentPopulation.push).toHaveBeenCalledWith(2);
-          expect(Image.getByID).toHaveBeenCalledWith(2);
+          expect(Image.getByID).not.toHaveBeenCalled(); // b/c dirty bit not set
+          expect($scope.individualData.dirty).toEqual(false);
           expect($location.path).toHaveBeenCalledWith("/population");
       }));
   });
