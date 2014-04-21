@@ -262,3 +262,152 @@ appServices.factory('Image', [ '$http', 'Population',
         };
     }]);
 
+appServices.factory('ConiferLib',
+  function(){
+      var is_array,
+          _epsilon, epsilon, setEpsilon, equivWithin, equivZero, equiv, equivArrays,
+          objDiff, arrayRelativeDiff, arrayRelativeDiff, arrayUnion,
+          arrayIndex, arrayContains, randomKey, randomKeyExcept, randomNormalDist;
+    
+    // From Crockford. Works for arrays defined within window or frame.
+    is_array = function(a) {
+        return a && typeof a === 'object' && a.constructor === Array;
+    }
+    
+    _epsilon = 1e-6;
+    
+    epsilon = function() {
+        return _epsilon;
+    }
+    
+    setEpsilon = function(e) {
+        _epsilon = e;
+    }
+    
+    equivWithin = function(n, e) {
+        return n < e;
+    };
+    
+    equivZero = function(n) {
+        return equivWithin(n, _epsilon);
+    };
+    
+    equiv = function(n1, n2) {
+        if (typeof n1 == "number" && typeof n2 == "number"){
+            return equivWithin(n2 - n1, _epsilon);
+        } else if (typeof n1 == "undefined" && typeof n2 == "undefined") {
+            return true;
+        } else {
+            return false;
+        }
+    };
+    
+    equivArrays = function(a1, a2) {
+        var i;
+        if (typeof a1 == "undefined" && typeof a2 == "undefined") {
+            return true;
+        }
+        else if (is_array(a1) && is_array(a2)) {
+            if (a1.length != a2.length) {
+                return false;
+            }
+            
+            for (i = 0; i < a1.length; ++i) {
+                if (!equiv(a1[i], a2[i])) {
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    // Shallow comparison of elem with array elements.
+    // Returns element index in array, or -1 if element not in array.
+    arrayIndex = function(arr, elem) {
+        var i;
+        for (i = 0; i < arr.length; ++i) {
+            if (arr[i] == elem) {
+                return i;
+            }
+        }
+        return -1;
+    };
+    
+    arrayContains = function(arr, elem) {
+        return arrayIndex(arr, elem) != -1;
+    }
+    
+    arrayUnion = function(arrs) {
+        var result, i, j;
+        result = [];
+        for (i = 0; i < arrs.length; ++i) {
+            for (j = 0; j < arrs[i].length; ++j) {
+                if (!arrayContains(result, arrs[i][j])) {
+                    result.push(arrs[i][j]);
+                }
+            }
+        }
+        return result;
+    };
+    
+    arrayRelativeDiff = function(left, right) {
+        var lenL, lenR, i, min, result;
+
+        result = [];
+
+        if (typeof left == "undefined") {
+            lenL = 0;
+        } else {
+            lenL = left.length;
+        }
+
+        if (typeof right == "undefined") {
+            lenR = 0;
+        } else {
+            lenR = right.length;
+        }
+        
+        if (lenL == 0 && lenR == 0) {
+            return result;
+        }
+        
+        min = (lenL <= lenR) ? lenL : lenR;
+        for (i = 0; i < min; ++i) {
+            if (left[i] == right[i]) {
+                result.push(0.0);
+            } else if (left[i] == 0) {
+                result.push(1.0); // By convention, but inconsistent math
+            } else {
+                result.push( (right[i] - left[i]) / left[i] );
+            }
+        }
+        
+        if (lenL > lenR) {
+            for (i = min; i < lenL; ++i) {
+                result.push(-1.0); // By convention, but inconsistent math
+            }
+        } else {
+            for (i = min; i < lenR; ++i) {
+                result.push(1.0); // By convention, but inconsistent math
+            }
+        }
+        
+        return result;
+    };
+    
+    return {
+          'epsilon': epsilon
+        , 'setEpsilon': setEpsilon
+        , 'equivWithin': equivWithin
+        , 'equivZero': equivZero
+        , 'equiv': equiv
+        , 'equivArrays': equivArrays
+        
+        , 'arrayIndex': arrayIndex
+        , 'arrayContains': arrayContains
+        , 'arrayUnion': arrayUnion
+        , 'arrayRelativeDiff': arrayRelativeDiff
+    }
+});

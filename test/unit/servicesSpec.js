@@ -11,66 +11,94 @@ describe('service', function() {
       expect(version).toEqual('0.1');
     }));
   });
-  
-  // describe('Database', function() {
-  //     
-  //     var database;
-  //     
-  //     describe('.init and .queryAll', function() {
-  //       var store = {};
-  //   
-  //       beforeEach(function() {
-  //             angular.mock.module('myApp.services', ['ngResource']);
-  //             
-  //             angular.mock.inject(function(_Database_) {
-  //                 database = _Database_;
-  //             })
-  //             
-  //             // // LocalStorage mock.
-  //             // spyOn(localStorage, 'getItem').andCallFake(function(key) {
-  //             //     return store[key];
-  //             // });
-  //             // Object.defineProperty(sessionStorage, "setItem", { writable: true });
-  //             // spyOn(localStorage, 'setItem').andCallFake(function(key, value) {
-  //             //     store[key] = value;
-  //             // });
-  //         });
-  //                         
-  //       afterEach(function () {
-  //           store = {};
-  //       });
-  //       
-  //       it('should return empty array', function() {
-  //               var rows = [];
-  //               database.init();
-  //               rows = database.queryAll();
-  //               expect(rows.length).toEqual(0);
-  //       });
-  //     });
-  
-      // describe('.insertInto and .queryAll', function() {
-      //   var scope;
-      //     
-      //   beforeEach(inject(function($rootScope,Database) {
-      //         scope = $rootScope.$new();
-      //         Database.init();
-      //         scope.myData = [];
-      //       }));
-      //       
-      //   it('should return one item', function() {
-      //       // Nothing there yet.
-      //       expect(length(scope.myData)).toEqual(0);
-      //   
-      //       // Insert one item, which should have id = 0.
-      //       id = Database.insertInto({foo:"bar"});
-      //       expect(id).toEqual(0);
-      //   
-      //       // Query all rows, which should return one item.
-      //       scope.myData = Database.queryAll();
-      //       expect(length(scope.myData)).toEqual(1);
-      //       expect(scope.myData[0]).toEqual({foo:"bar"});
-      //   });
-      // });
 
-   // });  
+  describe('ConiferLib', function(){
+      beforeEach(inject(function(ConiferLib) {
+          this.addMatchers({
+             toBeEquiv: function(expected) {
+               return ConiferLib.equiv(this.actual, expected);
+             }
+             , toBeEquivArrays: function(expected) {
+               return ConiferLib.equivArrays(this.actual, expected);
+             }
+          });
+      }));
+      
+      describe('arrayIndex', function() {
+          it('should return -1 for empty array', inject(function(ConiferLib) {
+              expect(ConiferLib.arrayIndex([], 1)).toEqual(-1);
+          }));
+          it('should return -1 for element not in non-empty array', inject(function(ConiferLib) {
+              expect(ConiferLib.arrayIndex([0,1], 2)).toEqual(-1);
+          }));
+          it('should return 0 if element head of array', inject(function(ConiferLib) {
+              expect(ConiferLib.arrayIndex([1], 1)).toEqual(0);
+          }));
+          it('should return element index in non-empty array', inject(function(ConiferLib) {
+              expect(ConiferLib.arrayIndex([0,1], 1)).toEqual(1);
+          }));
+      });
+
+      describe('arrayContains', function() {
+          it('should return false for empty array', inject(function(ConiferLib) {
+              expect(ConiferLib.arrayContains([], 1)).toEqual(false);
+          }));
+          it('should return false for element not in non-empty array', inject(function(ConiferLib) {
+              expect(ConiferLib.arrayContains([0,1], 2)).toEqual(false);
+          }));
+          it('should return true if element in singleton array', inject(function(ConiferLib) {
+              expect(ConiferLib.arrayContains([1], 1)).toEqual(true);
+          }));
+          it('should return true if element in non-empty array', inject(function(ConiferLib) {
+              expect(ConiferLib.arrayContains([0,1], 1)).toEqual(true);
+          }));
+      });
+
+      describe('arrayUnion', function() {
+          it('should return empty for empty array', inject(function(ConiferLib) {
+              expect(ConiferLib.arrayUnion([])).toEqual([]);
+          }));
+          it('should return empty for list of empty arrays', inject(function(ConiferLib) {
+              expect(ConiferLib.arrayUnion([[], [], []])).toEqual([]);
+          }));
+          it('should return all elements in given one array of unique elements',
+            inject(function(ConiferLib) {
+              expect(ConiferLib.arrayUnion([[1,2,3]])).toEqual([1,2,3]);
+          }));
+          it('should return unique elements of singleton array', inject(function(ConiferLib) {
+              expect(ConiferLib.arrayUnion([[0,1,1,0]])).toEqual([0,1]);
+          }));
+          it('should return unique elements across all input arrays', inject(function(ConiferLib) {
+              expect(ConiferLib.arrayUnion([[0,1],[0,2]])).toEqual([0,1,2]);
+          }));
+      });
+
+      // Describes some inconsistent math. By convention, I'm returning +/- 1.0 for
+      // added or deleted elements, respectively, and +1.0 for elements changed from 0.
+      describe('arrayRelativeDiff', function() {
+          it('should return empty for empty arrays', inject(function(ConiferLib) {
+              expect(ConiferLib.arrayRelativeDiff([],[])).toEqual([]);
+          }));
+          it('should return zeroes for identical arrays', inject(function(ConiferLib) {
+              expect(ConiferLib.arrayRelativeDiff([1,2,3], [1,2,3])).toBeEquivArrays([0,0,0]);
+          }));
+          it('should return 1 for elements in right array beyond length of left array',
+            inject(function(ConiferLib) {
+              expect(ConiferLib.arrayRelativeDiff([1], [1,2,3])).toBeEquivArrays([0,1,1]);
+          }));
+          it('should return -1 for elements in left array beyond length of right array',
+            inject(function(ConiferLib) {
+              expect(ConiferLib.arrayRelativeDiff([1,2,3], [1])).toBeEquivArrays([0,-1,-1]);
+          }));
+          it('should return relative difference for elements at shared indices',
+            inject(function(ConiferLib) {
+              expect(ConiferLib.arrayRelativeDiff([1,1,1], [1.1,1.2,1.3])).
+                toBeEquivArrays([0.1,0.2,0.3]);
+          }));
+          it('should return 1 for relative difference from 0',
+            inject(function(ConiferLib) {
+              expect(ConiferLib.arrayRelativeDiff([0, 0], [10, -10])).toBeEquivArrays([1, 1]);
+          }));
+      });
+  });
 });
