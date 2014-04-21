@@ -128,6 +128,114 @@ describe('controllers', function(){
           expect($scope.view).toEqual(true);
           expect($scope.individualData).toEqual(individual0.data);
       }));
+
+      it('.experiment should go to ExperimentCtrl',
+        inject(function(Population,Lineage,$location,$routeParams) {
+            
+          spyOn(Population, 'queryID').andReturn(individual0);
+          spyOn(Lineage, 'queryLast').andReturn(individual0);
+          spyOn($location, 'path').andReturn();
+     
+          $routeParams.id = 0; // it's just a map, so assign the value.
+     
+          controller = createController();
+          $scope.experiment();
+          expect($location.path).toHaveBeenCalledWith('/experiment/0')
+          expect($scope.view).toEqual(true);
+          expect($scope.individualData).toEqual(individual0.data);
+      }));
+  });
+  
+  describe('ExperimentCtrl', function() {
+      var $scope, $rootScope, $controller, controller, createController,
+          individual0, individual1;
+      
+      beforeEach(inject(function($injector){
+          $rootScope  = $injector.get('$rootScope');
+          $controller = $injector.get('$controller');
+
+          $scope      = $rootScope.$new();
+
+          createController = function() {
+              return $controller('ExperimentCtrl', {
+                  '$scope': $scope
+              });
+          };
+          
+          individual0 = {id:0, data:{treeParams:{ foo:"bar"}, imageUrl:"foo.svg"}};
+          individual1 = {id:1, data:{treeParams:{ foo:"bar"}, imageUrl:""}};
+      }));
+      
+      it('should copy data for individual', inject(function(Population,Lineage) {
+          spyOn(Population, 'queryID').andReturn(individual0);
+          spyOn(Population, 'copyIndividual').andReturn(individual1.data);
+          spyOn(Lineage, 'queryLast').andReturn(individual0);
+     
+          controller = createController();
+          expect($scope.view).toEqual(false);
+          expect($scope.individualData.treeParams).toEqual(individual1.data.treeParams);
+          expect($scope.individualData.imageUrl).toEqual("foo.svg");
+      }));
+
+      it('.test should update imageUrl', inject(function(Population,Lineage,Image) {
+          spyOn(Population, 'queryID').andReturn(individual0);
+          spyOn(Population, 'copyIndividual').andReturn(individual1.data);
+          spyOn(Lineage, 'queryLast').andReturn(individual0);
+          spyOn(Image, 'get').andCallFake(function() {
+              individual1.data.imageUrl = "zot.svg";
+          });
+     
+          controller = createController();
+          $scope.test();
+          expect(Image.get).toHaveBeenCalled();
+          expect($scope.individualData.imageUrl).toEqual("zot.svg");
+      }));
+
+      it('.destroy should return to ViewCtrl', 
+        inject(function(Population,Lineage,Image,$location,$routeParams) {
+
+          spyOn(Population, 'queryID').andReturn(individual0);
+          spyOn(Population, 'copyIndividual').andReturn(individual1.data);
+          spyOn(Lineage, 'queryLast').andReturn(individual0);
+          spyOn(Image, 'get').andCallFake(function() {
+              individual1.data.imageUrl = "zot.svg";
+          });
+          spyOn($location,'path').andReturn();
+
+          $routeParams.id = 1; // it's just a map, so assign the value.
+     
+          controller = createController();
+          $scope.destroy();
+          expect($location.path).toHaveBeenCalledWith("/view/1");
+      }));
+
+      it('.propagate should reinitialize population and lineage',
+        inject(function(Population, CurrentPopulation,Lineage,Image,$location) {
+        
+          spyOn(Population, 'init').andReturn();
+          spyOn(Population, 'queryID').andReturn(individual0);
+          spyOn(Population, 'copyIndividual').andReturn(individual1.data);
+          spyOn(Population, 'insertInto').andReturn(2);
+          
+          spyOn(CurrentPopulation, 'init').andReturn();
+          spyOn(CurrentPopulation, 'push').andReturn();
+                    
+          spyOn(Lineage, 'queryLast').andReturn(individual0);
+          spyOn(Lineage, 'init').andReturn();
+          
+          spyOn(Image, 'getByID').andReturn();
+          spyOn($location,'path').andReturn();
+     
+          controller = createController();
+          $scope.propagate();
+          expect(Lineage.init).toHaveBeenCalled();
+          expect(Population.init).toHaveBeenCalled();
+          expect(CurrentPopulation.init).toHaveBeenCalled();
+          expect(Population.insertInto).toHaveBeenCalledWith(individual1.data);
+          expect(CurrentPopulation.push).toHaveBeenCalledWith(2);
+          expect(Image.getByID).toHaveBeenCalledWith(2);
+          expect($location.path).toHaveBeenCalledWith("/population");
+      }));
   });
   
 });
