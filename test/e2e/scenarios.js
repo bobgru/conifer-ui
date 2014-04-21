@@ -6,20 +6,20 @@ describe('my app', function() {
 
   browser.get('/app/index.html');
 
-  it('should automatically redirect to /population when location hash/fragment is empty', function() {
+  it('should default to /population', function() {
     expect(browser.getLocationAbsUrl()).toMatch("/population");
   });
 
 
-  describe('population', function() {
+  describe('The population template', function() {
 
-    it('should render view when user navigates to #/view/0', function() {
+    it('should allow navigation to individual view', function() {
         browser.get('/app/index.html#/population');
         browser.get('#/view/0');
         expect(browser.getLocationAbsUrl()).toMatch("/view/0");
     });
 
-    it('should return to population after propagating', function() {
+    it('should remain visible after propagating', function() {
         browser.get('/app/index.html');
         element.all(by.className('propagate')).first().click();
         expect(browser.getLocationAbsUrl()).toMatch("/population");
@@ -33,7 +33,7 @@ describe('my app', function() {
         );
     });
 
-    it('should be 8 after propapage', function() {
+    it('should be 8 after propapate', function() {
         browser.get('/app/index.html');
         element.all(by.className('propagate')).first().click();
         element.all(by.className('propagate')).then(
@@ -61,14 +61,14 @@ describe('my app', function() {
   });
 
 
-  xdescribe('view2', function() {
+  xdescribe('view', function() {
 
     beforeEach(function() {
-      browser.get('index.html#/view2');
+      browser.get('index.html#/view/0');
     });
 
 
-    it('should render view2 when user navigates to /view2', function() {
+    it('should render view when user navigates to /view/0', function() {
       expect(element.all(by.css('[ng-view] p')).first().getText()).
         toMatch(/partial for view 2/);
     });
