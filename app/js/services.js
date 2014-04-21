@@ -265,7 +265,7 @@ appServices.factory('Image', [ '$http', 'Population',
 appServices.factory('ConiferLib',
   function(){
       var is_array,
-          _epsilon, epsilon, setEpsilon, equivWithin, equivZero, equiv, equivArrays,
+          _epsilon, epsilon, setEpsilon, equivZeroWithin, equivZero, equiv, equivArrays,
           objDiff, arrayRelativeDiff, arrayRelativeDiff, arrayUnion,
           arrayIndex, arrayContains, randomKey, randomKeyExcept, randomNormalDist;
     
@@ -284,7 +284,7 @@ appServices.factory('ConiferLib',
         _epsilon = e;
     }
     
-    equivWithin = function(n, e) {
+    equivZeroWithin = function(n, e) {
         return n < e;
     };
     
@@ -293,10 +293,10 @@ appServices.factory('ConiferLib',
     };
     
     equiv = function(n1, n2) {
-        if (typeof n1 == "number" && typeof n2 == "number"){
-            return equivWithin(n2 - n1, _epsilon);
-        } else if (typeof n1 == "undefined" && typeof n2 == "undefined") {
-            return true;
+        if (n1 && typeof n1 == "number" && n2 && typeof n2 == "number"){
+            return equivZeroWithin(n2 - n1, _epsilon);
+        } else if (!n1 && !n2) {
+            return true; // neither is defined
         } else {
             return false;
         }
@@ -400,7 +400,7 @@ appServices.factory('ConiferLib',
     return {
           'epsilon': epsilon
         , 'setEpsilon': setEpsilon
-        , 'equivWithin': equivWithin
+        , 'equivZeroWithin': equivZeroWithin
         , 'equivZero': equivZero
         , 'equiv': equiv
         , 'equivArrays': equivArrays
