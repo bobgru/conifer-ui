@@ -290,7 +290,7 @@ appServices.factory('ConiferLib',
         };
 
         equivZeroWithin = function (n, e) {
-            return n < e;
+            return Math.abs(n) <= e;
         };
 
         equivZero = function (n) {
@@ -303,6 +303,10 @@ appServices.factory('ConiferLib',
             }
             if (n1 === -Infinity && n2 === -Infinity) {
                 return true;
+            }
+            if (n1 === Infinity || n1 === -Infinity ||
+                n2 === Infinity || n2 === -Infinity) {
+                return false;
             }
             return equivZeroWithin(n2 - n1, eps);
         };

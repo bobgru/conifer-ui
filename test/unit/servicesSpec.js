@@ -30,6 +30,7 @@ describe('service', function() {
                return ConiferLib.equivObjects(this.actual, expected);
              }
           });
+          ConiferLib.setEpsilon(1e-6);
       }));
       
       describe('isArray', function() {
@@ -53,6 +54,78 @@ describe('service', function() {
           }));
           it('should return false for boolean', inject(function(ConiferLib) {
               expect(ConiferLib.isArray(false)).toEqual(false);
+          }));
+      });
+      
+      describe('epsilon', function() {
+          it('should be settable', inject(function(ConiferLib) {
+              expect(ConiferLib.epsilon(ConiferLib.setEpsilon(123))).toEqual(123);
+          }));
+      });
+      
+      describe('equivZeroWithin', function() {
+          it('should reject', inject(function(ConiferLib) {
+              expect(ConiferLib.equivZeroWithin(10, 5)).toEqual(false);
+          }));
+          it('should accept', inject(function(ConiferLib) {
+              expect(ConiferLib.equivZeroWithin(5, 10)).toEqual(true);
+          }));
+          it('should accept at edge', inject(function(ConiferLib) {
+              expect(ConiferLib.equivZeroWithin(5, 5)).toEqual(true);
+          }));
+      });
+      
+      describe('equivZero', function() {
+          it('should reject', inject(function(ConiferLib) {
+              expect(ConiferLib.equivZero(0.00001)).toEqual(false);
+          }));
+          it('should accept', inject(function(ConiferLib) {
+              expect(ConiferLib.equivZero(0.000000999999)).toEqual(true);
+          }));
+          it('should accept at edge', inject(function(ConiferLib) {
+              expect(ConiferLib.equivZero(0.000001)).toEqual(true);
+          }));
+      });
+      
+      describe('equiv', function() {
+          it('should reject', inject(function(ConiferLib) {
+              expect(ConiferLib.equiv(1.00001, 1.00002)).toEqual(false);
+          }));
+          it('should accept', inject(function(ConiferLib) {
+              expect(ConiferLib.equiv(1.0000001, 1.0000002)).toEqual(true);
+          }));
+          it('should accept at edge', inject(function(ConiferLib) {
+              expect(ConiferLib.equiv(1.000001, 1.00000099999999)).toEqual(true);
+          }));
+          it('should accept Infinity', inject(function(ConiferLib) {
+              expect(ConiferLib.equiv(Infinity, Infinity)).toEqual(true);
+          }));
+          it('should accept negative Infinity', inject(function(ConiferLib) {
+              expect(ConiferLib.equiv(-Infinity, -Infinity)).toEqual(true);
+          }));
+          it('should reject opposite Infinities', inject(function(ConiferLib) {
+              expect(ConiferLib.equiv(Infinity, -Infinity)).toEqual(false);
+          }));
+      });
+      
+      describe('equivArrays', function() {
+          it('should accept empty and empty', inject(function(ConiferLib) {
+              expect(ConiferLib.equivArrays([],[])).toEqual(true);
+          }));
+          it('should accept identical non-empty arrays', inject(function(ConiferLib) {
+              expect(ConiferLib.equivArrays([1,2,3],[1,2,3])).toEqual(true);
+          }));
+          it('should accept identical non-empty arrays at edge', inject(function(ConiferLib) {
+              expect(ConiferLib.equivArrays([1,2.000001,3],[1,2.000002,3])).toEqual(true);
+          }));
+          it('should reject when left array is larger', inject(function(ConiferLib) {
+              expect(ConiferLib.equivArrays([1,2],[1])).toEqual(false);
+          }));
+          it('should reject when right array is larger', inject(function(ConiferLib) {
+              expect(ConiferLib.equivArrays([1],[1,2])).toEqual(false);
+          }));
+          it('should reject when numbers are not equivalent', inject(function(ConiferLib) {
+              expect(ConiferLib.equivArrays([1,2.000001],[1,2.000003])).toEqual(false);
           }));
       });
       
