@@ -32,6 +32,30 @@ describe('service', function() {
           });
       }));
       
+      describe('isArray', function() {
+          it('should return true for empty array', inject(function(ConiferLib) {
+              expect(ConiferLib.isArray([])).toEqual(true);
+          }));
+          it('should return false for empty object', inject(function(ConiferLib) {
+              expect(ConiferLib.isArray({})).toEqual(false);
+          }));
+          it('should return false for number', inject(function(ConiferLib) {
+              expect(ConiferLib.isArray(1)).toEqual(false);
+          }));
+          it('should return false for string', inject(function(ConiferLib) {
+              expect(ConiferLib.isArray("")).toEqual(false);
+          }));
+          it('should return false for function', inject(function(ConiferLib) {
+              expect(ConiferLib.isArray(function () {})).toEqual(false);
+          }));
+          it('should return false for undefined', inject(function(ConiferLib) {
+              expect(ConiferLib.isArray()).toEqual(false);
+          }));
+          it('should return false for boolean', inject(function(ConiferLib) {
+              expect(ConiferLib.isArray(false)).toEqual(false);
+          }));
+      });
+      
       describe('arrayIndex', function() {
           it('should return -1 for empty array', inject(function(ConiferLib) {
               expect(ConiferLib.arrayIndex([], 1)).toEqual(-1);

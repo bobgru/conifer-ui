@@ -271,8 +271,9 @@ appServices.factory('ConiferLib',
             randomKey, randomKeyExcept, randomNormalDist;
 
         // From Crockford. Works for arrays defined within window or frame.
+        // Note: I removed the initial test of a, which allowed checking simple types.
         isArray = function (a) {
-            return a && typeof a === 'object' && a.constructor === Array;
+            return typeof a === 'object' && a.constructor === Array;
         };
 
         // The functions in this module that take number arguments, or array,
