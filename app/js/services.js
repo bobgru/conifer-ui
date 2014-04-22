@@ -351,10 +351,12 @@ appServices.factory('ConiferLib',
                 }
                 if (typeof val1 === 'object') {
                     if (!equivObjects(val1, val2)) {
-                        return false;
+                         return false;
                     }
                 } else if (typeof val1 !== 'number') {
-                    return val1 === val2;
+                    if (val1 !== val2) {
+                        return false;
+                    }
                 } else if (!equiv(val1, val2)) {
                     return false;
                 }

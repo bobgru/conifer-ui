@@ -141,6 +141,39 @@ describe('service', function() {
           }));
       });
       
+      describe('equivObjects', function() {
+          it('should accept empty and empty', inject(function(ConiferLib) {
+              expect(ConiferLib.equivObjects({},{})).toEqual(true);
+          }));
+          it('should accept identical non-empty single-level objects', inject(function(ConiferLib) {
+              expect(ConiferLib.equivObjects({a:1,b:"a",c:3}, {a:1,b:"a",c:3})).toEqual(true);
+          }));
+          it('should reject when left object has more keys', inject(function(ConiferLib) {
+              expect(ConiferLib.equivObjects({a:1,b:"a",c:3}, {a:1,b:"a"})).toEqual(false);
+          }));
+          it('should reject when right object has more keys', inject(function(ConiferLib) {
+              expect(ConiferLib.equivObjects({a:1,b:"a"}, {a:1,b:"a",c:3})).toEqual(false);
+          }));
+          it('should accept when numbers are equivalent', inject(function(ConiferLib) {
+              expect(ConiferLib.equivObjects({a:1,b:"a",c:3}, {a:1.000001,b:"a",c:3})).toEqual(true);
+          }));
+          it('should reject when numbers are not equivalent', inject(function(ConiferLib) {
+              expect(ConiferLib.equivObjects({a:1,b:"a",c:3}, {a:1.000002,b:"a",c:3})).toEqual(false);
+          }));
+          it('should accept nested objects', inject(function(ConiferLib) {
+              expect(ConiferLib.equivObjects({a:1,b:{d:4,e:5},c:3},
+                  {a:1,b:{d:4,e:5},c:3})).toEqual(true);
+          }));
+          it('should reject different nested objects', inject(function(ConiferLib) {
+              expect(ConiferLib.equivObjects({a:1,b:{d:4,e:5},c:3},
+                  {a:1,b:{d:4,e:6},c:3})).toEqual(false);
+          }));
+          it('should accept nested objects within tolerance', inject(function(ConiferLib) {
+              expect(ConiferLib.equivObjects({a:1,b:{d:4,e:5},c:3},
+                  {a:1,b:{d:4,e:5.0000001},c:3})).toEqual(true);
+          }));
+      });
+      
       describe('arrayIndex', function() {
           it('should return -1 for empty array', inject(function(ConiferLib) {
               expect(ConiferLib.arrayIndex([], 1)).toEqual(-1);
