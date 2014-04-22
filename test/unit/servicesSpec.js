@@ -283,6 +283,38 @@ describe('service', function() {
               expect(ConiferLib.objRelativeDiff({a:0, b:0}, {a:10, b:-10})).
                 toBeEquivObjRelativeDiffs({diff:{a:Infinity, b:-Infinity}, added:{}, deleted:{}});
           }));
+          it('should return zeroes for nested identical objects', inject(function(ConiferLib) {
+              expect(ConiferLib.objRelativeDiff({a:1,b:{d:4,e:5},c:3}, {a:1,b:{d:4,e:5},c:3})).
+                toBeEquivObjRelativeDiffs({
+                    diff:{a:0,b:{diff: {d:0,e:0}, added: {}, deleted: {}},c:0},
+                    added:{},
+                    deleted:{}
+                });
+          }));
+          it('should return relative diffs for nested objects', inject(function(ConiferLib) {
+              expect(ConiferLib.objRelativeDiff({a:1,b:{d:4,e:5},c:3}, {a:1,b:{d:8,e:15},c:3})).
+                toBeEquivObjRelativeDiffs({
+                    diff:{a:0,b:{diff: {d:1,e:2}, added: {}, deleted: {}},c:0},
+                    added:{},
+                    deleted:{}
+                });
+          }));
+          it('should report added or deleted keys in nested objects', inject(function(ConiferLib) {
+              expect(ConiferLib.objRelativeDiff({a:1,b:{d:4,e:5},c:3}, {a:1,b:{d:4,f:6},c:3})).
+                toBeEquivObjRelativeDiffs({
+                    diff:{a:0,b:{diff: {d:0}, added: {f:6}, deleted: {e:5}},c:0},
+                    added:{},
+                    deleted:{}
+                });
+          }));
+          it('should report added or deleted nested objects', inject(function(ConiferLib) {
+              expect(ConiferLib.objRelativeDiff({a:1,b:{d:4,e:5},c:3}, {a:1,c:3,f:{g:7}})).
+                toBeEquivObjRelativeDiffs({
+                    diff:{a:0,c:0},
+                    added:{f:{g:7}},
+                    deleted:{b:{d:4,e:5}}
+                });
+          }));
       });
   });
 });

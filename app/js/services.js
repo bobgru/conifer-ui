@@ -467,6 +467,12 @@ appServices.factory('ConiferLib',
                     } else {
                         result.diff[key] = (right[key] - left[key]) / left[key];
                     }
+                } else if (typeof left[key] === 'object') {
+                    if (typeof right[key] !== 'object') {
+                        result.deleted[key] = left[key];
+                    } else {
+                        result.diff[key] = objRelativeDiff(left[key], right[key]);
+                    }
                 }
             }
 
@@ -475,7 +481,7 @@ appServices.factory('ConiferLib',
             for (i = 0; i < lenR; ++i) {
                 key = keysR[i];
                 if (left[key] === undefined) {
-                    if (typeof right[key] === 'number') {
+                    if (typeof right[key] === 'number' || typeof right[key] === 'object') {
                         result.added[key] = right[key];
                     }
                 }
