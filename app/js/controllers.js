@@ -71,7 +71,7 @@ app.controller('ViewCtrl', ['$scope', '$routeParams', '$location',
         // Take the parent if we fail to find the id.
         // Assumes there is at least one individual.
         var match = Population.queryID($routeParams.id);
-        if (typeof(match) == "undefined") {
+        if (match === undefined) {
             match = Lineage.queryLast; // could return null
         }
         
