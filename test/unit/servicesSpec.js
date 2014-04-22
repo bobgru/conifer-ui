@@ -17,9 +17,17 @@ describe('service', function() {
           this.addMatchers({
              toBeEquiv: function(expected) {
                return ConiferLib.equiv(this.actual, expected);
-             }
-             , toBeEquivArrays: function(expected) {
+             },
+             toBeEquivArrays: function(expected) {
                return ConiferLib.equivArrays(this.actual, expected);
+             },
+             toBeEquivRelativeDiffs: function(expected) {
+               return ConiferLib.equivArrays(this.actual.diff, expected.diff) &&
+                      ConiferLib.equivArrays(this.actual.added, expected.added) &&
+                      ConiferLib.equivArrays(this.actual.deleted, expected.deleted);
+             },
+             toBeEquivObjRelativeDiffs: function(expected) {
+               return ConiferLib.equivObjects(this.actual, expected);
              }
           });
       }));
@@ -73,31 +81,65 @@ describe('service', function() {
           }));
       });
 
-      // Describes some inconsistent math. By convention, I'm returning +/- 1.0 for
-      // added or deleted elements, respectively, and +1.0 for elements changed from 0.
       describe('arrayRelativeDiff', function() {
           it('should return empty for empty arrays', inject(function(ConiferLib) {
-              expect(ConiferLib.arrayRelativeDiff([],[])).toEqual([]);
+              expect(ConiferLib.arrayRelativeDiff([],[])).
+                toBeEquivRelativeDiffs({diff:[], added:[], deleted:[]});
           }));
           it('should return zeroes for identical arrays', inject(function(ConiferLib) {
-              expect(ConiferLib.arrayRelativeDiff([1,2,3], [1,2,3])).toBeEquivArrays([0,0,0]);
+              expect(ConiferLib.arrayRelativeDiff([1,2,3], [1,2,3])).
+                toBeEquivRelativeDiffs({diff:[0,0,0], added:[], deleted:[]});
           }));
-          it('should return 1 for elements in right array beyond length of left array',
+          it('should indicate elements in right array beyond length of left array',
             inject(function(ConiferLib) {
-              expect(ConiferLib.arrayRelativeDiff([1], [1,2,3])).toBeEquivArrays([0,1,1]);
+              expect(ConiferLib.arrayRelativeDiff([1], [1,2,3])).
+                toBeEquivRelativeDiffs({diff:[0], added:[2,3], deleted:[]});
           }));
-          it('should return -1 for elements in left array beyond length of right array',
+          it('should indicate elements in left array beyond length of right array',
             inject(function(ConiferLib) {
-              expect(ConiferLib.arrayRelativeDiff([1,2,3], [1])).toBeEquivArrays([0,-1,-1]);
+              expect(ConiferLib.arrayRelativeDiff([1,2,3], [1])).
+                toBeEquivRelativeDiffs({diff:[0], added:[], deleted:[2,3]});
           }));
           it('should return relative difference for elements at shared indices',
             inject(function(ConiferLib) {
               expect(ConiferLib.arrayRelativeDiff([1,1,1], [1.1,1.2,1.3])).
-                toBeEquivArrays([0.1,0.2,0.3]);
+                toBeEquivRelativeDiffs({diff:[0.1,0.2,0.3], added:[], deleted:[]});
           }));
-          it('should return 1 for relative difference from 0',
+          it('should return Infinity for relative difference from 0',
             inject(function(ConiferLib) {
-              expect(ConiferLib.arrayRelativeDiff([0, 0], [10, -10])).toBeEquivArrays([1, 1]);
+              expect(ConiferLib.arrayRelativeDiff([0, 0], [10, -10])).
+                toBeEquivRelativeDiffs({diff:[Infinity, -Infinity], added:[], deleted:[]});
+          }));
+      });
+
+      describe('objRelativeDiff', function() {
+          it('should return empty for empty objects', inject(function(ConiferLib) {
+              expect(ConiferLib.objRelativeDiff({},{})).
+                toBeEquivObjRelativeDiffs({diff:{}, added:{}, deleted:{}});
+          }));
+          it('should return zeroes for identical objects', inject(function(ConiferLib) {
+              expect(ConiferLib.objRelativeDiff({a:1,b:2,c:3}, {a:1,b:2,c:3})).
+                toBeEquivObjRelativeDiffs({diff:{a:0,b:0,c:0}, added:{}, deleted:{}});
+          }));
+          it('should indicate keys in right object but not in left',
+            inject(function(ConiferLib) {
+              expect(ConiferLib.objRelativeDiff({a:1}, {a:1,b:2,c:3})).
+                toBeEquivObjRelativeDiffs({diff:{a:0}, added:{b:2,c:3}, deleted:{}});
+          }));
+          it('should indicate keys in left object but not in right',
+            inject(function(ConiferLib) {
+              expect(ConiferLib.objRelativeDiff({a:1,b:2,c:3}, {a:1})).
+                toBeEquivObjRelativeDiffs({diff:{a:0}, added:{}, deleted:{b:2,c:3}});
+          }));
+          it('should return relative difference for elements at shared keys',
+            inject(function(ConiferLib) {
+              expect(ConiferLib.objRelativeDiff({a:1,b:1,c:1}, {a:1.1,b:1.2,c:1.3})).
+                toBeEquivObjRelativeDiffs({diff:{a:0.1,b:0.2,c:0.3}, added:{}, deleted:{}});
+          }));
+          it('should return Infinity for relative difference from 0',
+            inject(function(ConiferLib) {
+              expect(ConiferLib.objRelativeDiff({a:0, b:0}, {a:10, b:-10})).
+                toBeEquivObjRelativeDiffs({diff:{a:Infinity, b:-Infinity}, added:{}, deleted:{}});
           }));
       });
   });

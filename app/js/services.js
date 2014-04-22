@@ -1,7 +1,6 @@
 'use strict';
 
-/* Services */
-
+// Services
 
 var appServices = angular.module('myApp.services', ['ngResource']);
 
@@ -266,14 +265,18 @@ appServices.factory('Image', [ '$http', 'Population',
 
 appServices.factory('ConiferLib',
     function () {
-        var is_array, eps, epsilon, setEpsilon, equivZeroWithin, equivZero, equiv, equivArrays,
-            objDiff, arrayRelativeDiff, arrayUnion, arrayIndex, arrayContains,
+        var isArray, eps, epsilon, setEpsilon,
+            equivZeroWithin, equivZero, equiv, equivArrays, equivObjects,
+            objRelativeDiff, arrayRelativeDiff, arrayUnion, arrayIndex, arrayContains,
             randomKey, randomKeyExcept, randomNormalDist;
 
         // From Crockford. Works for arrays defined within window or frame.
-        is_array = function (a) {
+        isArray = function (a) {
             return a && typeof a === 'object' && a.constructor === Array;
         };
+
+        // The functions in this module that take number arguments, or array,
+        // will not validate them. That is the responsibility of the caller.
 
         eps = 1e-6;
 
@@ -294,33 +297,64 @@ appServices.factory('ConiferLib',
         };
 
         equiv = function (n1, n2) {
-            if ((n1 && typeof n1 === "number") && (n2 && typeof n2 === "number")) {
-                return equivZeroWithin(n2 - n1, eps);
+            if (n1 === Infinity && n2 === Infinity) {
+                return true;
             }
-            if (!n1 && !n2) {
-                return true; // neither is defined
+            if (n1 === -Infinity && n2 === -Infinity) {
+                return true;
             }
-            return false;
+            return equivZeroWithin(n2 - n1, eps);
         };
 
         equivArrays = function (a1, a2) {
             var i;
-            if (a1 === undefined && a2 === undefined) {
-                return true;
+            if (a1.length !== a2.length) {
+                return false;
             }
-            if (is_array(a1) && is_array(a2)) {
-                if (a1.length !== a2.length) {
+            for (i = 0; i < a1.length; ++i) {
+                if (!equiv(a1[i], a2[i])) {
                     return false;
                 }
+            }
+            return true;
+        };
 
-                for (i = 0; i < a1.length; ++i) {
-                    if (!equiv(a1[i], a2[i])) {
+        // Numbers are compared with equiv, all else with ===.
+        equivObjects = function (a1, a2) {
+            var keys1, keys2, i, val1, val2;
+            
+            // Deal with base cases of recursion.
+            if (typeof a1 === 'number') {
+                return equiv(a1,a2);
+            } else if (typeof a1 !== 'object') {
+                return a1 === a2;
+            }
+            
+            // Deep-compare them as objects with numerical equivalence
+            // modulo epsilon.
+            keys1 = Object.keys(a1);
+            keys2 = Object.keys(a2);
+            if (keys1.length !== keys2.length) {
+                return false;
+            }
+            for (i = 0; i < keys1.length; ++i) {
+                // Check for missing field in a2.
+                val1 = a1[keys1[i]];
+                val2 = a2[keys1[i]];
+                if (val2 === undefined) {
+                    return false;
+                }
+                if (typeof val1 === 'object') {
+                    if (!equivObjects(val1, val2)) {
                         return false;
                     }
+                } else if (typeof val1 !== 'number') {
+                    return val1 === val2;
+                } else if (!equiv(val1, val2)) {
+                    return false;
                 }
-                return true;
             }
-            return false;
+            return true;
         };
 
         // Shallow comparison of elem with array elements.
@@ -352,22 +386,16 @@ appServices.factory('ConiferLib',
             return result;
         };
 
+        // Analyzes left vs. right and returns relative diff, added, and deleted.
+        // If relative diff starting from 0, return +/- Infinity.
+        // Both arrays must be defined.
         arrayRelativeDiff = function (left, right) {
             var lenL, lenR, i, min, result;
 
-            result = [];
+            result = {diff:[], added:[], deleted:[]};
 
-            if (left === undefined) {
-                lenL = 0;
-            } else {
-                lenL = left.length;
-            }
-
-            if (right === undefined) {
-                lenR = 0;
-            } else {
-                lenR = right.length;
-            }
+            lenL = left.length;
+            lenR = right.length;
 
             if (lenL === 0 && lenR === 0) {
                 return result;
@@ -376,37 +404,92 @@ appServices.factory('ConiferLib',
             min = (lenL <= lenR) ? lenL : lenR;
             for (i = 0; i < min; ++i) {
                 if (left[i] === right[i]) {
-                    result.push(0.0);
+                    result.diff.push(0.0);
                 } else if (left[i] === 0) {
-                    result.push(1.0); // By convention, but inconsistent math
+                    result.diff.push(right[i] > 0 ? Infinity : -Infinity);
                 } else {
-                    result.push((right[i] - left[i]) / left[i]);
+                    result.diff.push((right[i] - left[i]) / left[i]);
                 }
             }
 
             if (lenL > lenR) {
                 for (i = min; i < lenL; ++i) {
-                    result.push(-1.0); // By convention, but inconsistent math
+                    result.deleted.push(left[i]);
                 }
             } else {
                 for (i = min; i < lenR; ++i) {
-                    result.push(1.0); // By convention, but inconsistent math
+                    result.added.push(right[i]);
                 }
             }
 
             return result;
         };
 
+        // Analyzes left vs. right and returns relative diff, added, and deleted.
+        // If relative diff starting from 0, return +/- Infinity.
+        // Both objects must be defined. Only number values are reported.
+        objRelativeDiff = function (left, right) {
+            var lenL, lenR, i, min, result, key, keysL, keysR;
+
+            result = {diff:{}, added:{}, deleted:{}};
+
+            keysL = Object.keys(left);
+            keysR = Object.keys(right);
+
+            lenL = keysL.length;
+            lenR = keysR.length;
+
+            if (lenL === 0 && lenR === 0) {
+                return result;
+            }
+
+            // Process all keys from left.
+            for (i = 0; i < lenL; ++i) {
+                key = keysL[i];
+                if (typeof left[key] === 'number') {
+                    if (typeof right[key] !== 'number') {
+                        result.deleted[key] = left[key];
+                    } else if (left[key] === 0) {
+                        if (right[key] === 0) {
+                            result.diff[key] = 0;
+                        } else if (right[key] > 0) {
+                            result.diff[key] = Infinity;
+                        } else {
+                            result.diff[key] = -Infinity;
+                        }
+                    } else {
+                        result.diff[key] = (right[key] - left[key]) / left[key];
+                    }
+                }
+            }
+
+            // Process all keys from right that aren't in left. All
+            // keys in common were handled in the previous loop.
+            for (i = 0; i < lenR; ++i) {
+                key = keysR[i];
+                if (left[key] === undefined) {
+                    if (typeof right[key] === 'number') {
+                        result.added[key] = right[key];
+                    }
+                }
+            }
+            
+            return result;
+        };
+
         return {
+            'isArray': isArray,
             'epsilon': epsilon,
             'setEpsilon': setEpsilon,
             'equivZeroWithin': equivZeroWithin,
             'equivZero': equivZero,
             'equiv': equiv,
             'equivArrays': equivArrays,
+            'equivObjects': equivObjects,
             'arrayIndex': arrayIndex,
             'arrayContains': arrayContains,
             'arrayUnion': arrayUnion,
-            'arrayRelativeDiff': arrayRelativeDiff
+            'arrayRelativeDiff': arrayRelativeDiff,
+            'objRelativeDiff': objRelativeDiff
         };
     });
