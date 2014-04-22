@@ -61,6 +61,9 @@ describe('service', function() {
           it('should be settable', inject(function(ConiferLib) {
               expect(ConiferLib.epsilon(ConiferLib.setEpsilon(123))).toEqual(123);
           }));
+          it('should take absolute value', inject(function(ConiferLib) {
+              expect(ConiferLib.epsilon(ConiferLib.setEpsilon(-123))).toEqual(123);
+          }));
       });
       
       describe('equivZeroWithin', function() {
@@ -69,6 +72,9 @@ describe('service', function() {
           }));
           it('should accept', inject(function(ConiferLib) {
               expect(ConiferLib.equivZeroWithin(5, 10)).toEqual(true);
+          }));
+          it('should accept when negative', inject(function(ConiferLib) {
+              expect(ConiferLib.equivZeroWithin(-5, 10)).toEqual(true);
           }));
           it('should accept at edge', inject(function(ConiferLib) {
               expect(ConiferLib.equivZeroWithin(5, 5)).toEqual(true);
@@ -82,6 +88,9 @@ describe('service', function() {
           it('should accept', inject(function(ConiferLib) {
               expect(ConiferLib.equivZero(0.000000999999)).toEqual(true);
           }));
+          it('should accept when negative', inject(function(ConiferLib) {
+              expect(ConiferLib.equivZero(-0.000000999999)).toEqual(true);
+          }));
           it('should accept at edge', inject(function(ConiferLib) {
               expect(ConiferLib.equivZero(0.000001)).toEqual(true);
           }));
@@ -93,6 +102,9 @@ describe('service', function() {
           }));
           it('should accept', inject(function(ConiferLib) {
               expect(ConiferLib.equiv(1.0000001, 1.0000002)).toEqual(true);
+          }));
+          it('should accept in other order', inject(function(ConiferLib) {
+              expect(ConiferLib.equiv(1.0000002, 1.0000001)).toEqual(true);
           }));
           it('should accept at edge', inject(function(ConiferLib) {
               expect(ConiferLib.equiv(1.000001, 1.00000099999999)).toEqual(true);

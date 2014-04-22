@@ -286,7 +286,7 @@ appServices.factory('ConiferLib',
         };
 
         setEpsilon = function (e) {
-            eps = e;
+            eps = Math.abs(e);
         };
 
         equivZeroWithin = function (n, e) {
