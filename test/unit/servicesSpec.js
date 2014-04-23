@@ -315,6 +315,14 @@ describe('service', function() {
                     deleted:{b:{d:4,e:5}}
                 });
           }));
+          it('should return zeroes for nested identical arrays', inject(function(ConiferLib) {
+              expect(ConiferLib.objRelativeDiff({a:1,b:[4,5],c:3}, {a:1,b:[4,5],c:3})).
+                toBeEquivObjRelativeDiffs({
+                    diff:{a:0,b:{diff: {"0":0,"1":0}, added: {}, deleted: {}},c:0},
+                    added:{},
+                    deleted:{}
+                });
+          }));
       });
   });
 });
