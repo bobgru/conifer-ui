@@ -323,6 +323,73 @@ describe('service', function() {
                     deleted:{}
                 });
           }));
+
+          // Sample of what conifer mutation statistics would look like:
+          it('should produce a report of conifer mutation statistics', inject(function(ConiferLib) {
+              var parentData, childData;
+              
+              parentData = {
+                  "treeParams": {
+                      "age": 2,
+                      "needles": false,
+                      "udTrunkLengthIncrementPerYear": 1.4,
+                      "udTrunkBranchLengthRatio": 0.65,
+                      "udTrunkBranchAngles": [ 0.698, 0.898, 1.31, 0.967 ],
+                      "udTrunkGirth": 5.0,
+                      "udWhorlsPerYear": 4,
+                      "udWhorlSize": 5,
+                      "udBranchGirth": 1.0,
+                      "udBranchBranchLengthRatio": 1.0,
+                      "udBranchBranchLengthRatio2": 1.0
+                  },
+                  "imageUrl": "img/specimen00.svg",
+                  "dirty": false
+              };
+
+              childData = {
+                  "treeParams": {
+                      "age": 2,
+                      "needles": false,
+                      "udTrunkLengthIncrementPerYear": 1.45,
+                      "udTrunkBranchLengthRatio": 0.65,
+                      "udTrunkBranchAngles": [ 0.698, 0.898, 1.0, 0.967 ],
+                      "udTrunkGirth": 5.0,
+                      "udWhorlsPerYear": 6,
+                      "udWhorlSize": 5,
+                      "udBranchGirth": 1.0,
+                      "udBranchBranchLengthRatio": 1.0,
+                      "udBranchBranchLengthRatio2": 1.0
+                  },
+                  "imageUrl": "img/specimen01.svg",
+                  "dirty": false
+              };
+              
+              expect(ConiferLib.objRelativeDiff(parentData, childData)).
+                toBeEquivObjRelativeDiffs({ 
+                        diff : {
+                            treeParams : { 
+                                diff : {
+                                    age : 0, 
+                                    udTrunkLengthIncrementPerYear : 0.03571428571428575, 
+                                    udTrunkBranchLengthRatio : 0, udTrunkBranchAngles : { 
+                                        diff : { 0 : 0, 1 : 0, 2 : -0.23664122137404583, 3 : 0 },
+                                        added : {  },
+                                        deleted : {  } 
+                                    }, 
+                                    udTrunkGirth : 0, 
+                                    udWhorlsPerYear : 0.5,
+                                    udWhorlSize : 0, 
+                                    udBranchGirth : 0, 
+                                    udBranchBranchLengthRatio : 0,
+                                    udBranchBranchLengthRatio2 : 0 },
+                                added : {  },
+                                deleted : {  } 
+                            } 
+                        },
+                        added : {  },
+                        deleted : {  } 
+                    });
+          }));
       });
   });
 });
