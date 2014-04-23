@@ -399,7 +399,7 @@ appServices.factory('ConiferLib',
         arrayRelativeDiff = function (left, right) {
             var lenL, lenR, i, min, result;
 
-            result = {diff:[], added:[], deleted:[]};
+            result = {relDiff:[], added:[], deleted:[]};
 
             lenL = left.length;
             lenR = right.length;
@@ -411,11 +411,11 @@ appServices.factory('ConiferLib',
             min = (lenL <= lenR) ? lenL : lenR;
             for (i = 0; i < min; ++i) {
                 if (left[i] === right[i]) {
-                    result.diff.push(0.0);
+                    result.relDiff.push(0.0);
                 } else if (left[i] === 0) {
-                    result.diff.push(right[i] > 0 ? Infinity : -Infinity);
+                    result.relDiff.push(right[i] > 0 ? Infinity : -Infinity);
                 } else {
-                    result.diff.push((right[i] - left[i]) / left[i]);
+                    result.relDiff.push((right[i] - left[i]) / left[i]);
                 }
             }
 
@@ -438,7 +438,7 @@ appServices.factory('ConiferLib',
         objRelativeDiff = function (left, right) {
             var lenL, lenR, i, min, result, key, keysL, keysR;
 
-            result = {diff:{}, added:{}, deleted:{}};
+            result = {relDiff:{}, added:{}, deleted:{}};
 
             keysL = Object.keys(left);
             keysR = Object.keys(right);
@@ -458,20 +458,20 @@ appServices.factory('ConiferLib',
                         result.deleted[key] = left[key];
                     } else if (left[key] === 0) {
                         if (right[key] === 0) {
-                            result.diff[key] = 0;
+                            result.relDiff[key] = 0;
                         } else if (right[key] > 0) {
-                            result.diff[key] = Infinity;
+                            result.relDiff[key] = Infinity;
                         } else {
-                            result.diff[key] = -Infinity;
+                            result.relDiff[key] = -Infinity;
                         }
                     } else {
-                        result.diff[key] = (right[key] - left[key]) / left[key];
+                        result.relDiff[key] = (right[key] - left[key]) / left[key];
                     }
                 } else if (typeof left[key] === 'object') {
                     if (typeof right[key] !== 'object') {
                         result.deleted[key] = left[key];
                     } else {
-                        result.diff[key] = objRelativeDiff(left[key], right[key]);
+                        result.relDiff[key] = objRelativeDiff(left[key], right[key]);
                     }
                 }
             }

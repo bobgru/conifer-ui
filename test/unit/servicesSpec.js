@@ -22,7 +22,7 @@ describe('service', function() {
                return ConiferLib.equivArrays(this.actual, expected);
              },
              toBeEquivRelativeDiffs: function(expected) {
-               return ConiferLib.equivArrays(this.actual.diff, expected.diff) &&
+               return ConiferLib.equivArrays(this.actual.relDiff, expected.relDiff) &&
                       ConiferLib.equivArrays(this.actual.added, expected.added) &&
                       ConiferLib.equivArrays(this.actual.deleted, expected.deleted);
              },
@@ -211,7 +211,7 @@ describe('service', function() {
           it('should return empty for list of empty arrays', inject(function(ConiferLib) {
               expect(ConiferLib.arrayUnion([[], [], []])).toEqual([]);
           }));
-          it('should return all elements in given one array of unique elements',
+          it('should return all elements if given one array of unique elements',
             inject(function(ConiferLib) {
               expect(ConiferLib.arrayUnion([[1,2,3]])).toEqual([1,2,3]);
           }));
@@ -226,67 +226,68 @@ describe('service', function() {
       describe('arrayRelativeDiff', function() {
           it('should return empty for empty arrays', inject(function(ConiferLib) {
               expect(ConiferLib.arrayRelativeDiff([],[])).
-                toBeEquivRelativeDiffs({diff:[], added:[], deleted:[]});
+                toBeEquivRelativeDiffs({relDiff:[], added:[], deleted:[]});
           }));
           it('should return zeroes for identical arrays', inject(function(ConiferLib) {
               expect(ConiferLib.arrayRelativeDiff([1,2,3], [1,2,3])).
-                toBeEquivRelativeDiffs({diff:[0,0,0], added:[], deleted:[]});
+                toBeEquivRelativeDiffs({relDiff:[0,0,0], added:[], deleted:[]});
           }));
           it('should indicate elements in right array beyond length of left array',
             inject(function(ConiferLib) {
               expect(ConiferLib.arrayRelativeDiff([1], [1,2,3])).
-                toBeEquivRelativeDiffs({diff:[0], added:[2,3], deleted:[]});
+                toBeEquivRelativeDiffs({relDiff:[0], added:[2,3], deleted:[]});
           }));
           it('should indicate elements in left array beyond length of right array',
             inject(function(ConiferLib) {
               expect(ConiferLib.arrayRelativeDiff([1,2,3], [1])).
-                toBeEquivRelativeDiffs({diff:[0], added:[], deleted:[2,3]});
+                toBeEquivRelativeDiffs({relDiff:[0], added:[], deleted:[2,3]});
           }));
           it('should return relative difference for elements at shared indices',
             inject(function(ConiferLib) {
               expect(ConiferLib.arrayRelativeDiff([1,1,1], [1.1,1.2,1.3])).
-                toBeEquivRelativeDiffs({diff:[0.1,0.2,0.3], added:[], deleted:[]});
+                toBeEquivRelativeDiffs({relDiff:[0.1,0.2,0.3], added:[], deleted:[]});
           }));
           it('should return Infinity for relative difference from 0',
             inject(function(ConiferLib) {
               expect(ConiferLib.arrayRelativeDiff([0, 0], [10, -10])).
-                toBeEquivRelativeDiffs({diff:[Infinity, -Infinity], added:[], deleted:[]});
+                toBeEquivRelativeDiffs({relDiff:[Infinity, -Infinity], added:[], deleted:[]});
           }));
       });
 
       describe('objRelativeDiff', function() {
           it('should return empty for empty objects', inject(function(ConiferLib) {
               expect(ConiferLib.objRelativeDiff({},{})).
-                toBeEquivObjRelativeDiffs({diff:{}, added:{}, deleted:{}});
+                toBeEquivObjRelativeDiffs({relDiff:{}, added:{}, deleted:{}});
           }));
           it('should return zeroes for identical objects', inject(function(ConiferLib) {
               expect(ConiferLib.objRelativeDiff({a:1,b:2,c:3}, {a:1,b:2,c:3})).
-                toBeEquivObjRelativeDiffs({diff:{a:0,b:0,c:0}, added:{}, deleted:{}});
+                toBeEquivObjRelativeDiffs({relDiff:{a:0,b:0,c:0}, added:{}, deleted:{}});
           }));
           it('should indicate keys in right object but not in left',
             inject(function(ConiferLib) {
               expect(ConiferLib.objRelativeDiff({a:1}, {a:1,b:2,c:3})).
-                toBeEquivObjRelativeDiffs({diff:{a:0}, added:{b:2,c:3}, deleted:{}});
+                toBeEquivObjRelativeDiffs({relDiff:{a:0}, added:{b:2,c:3}, deleted:{}});
           }));
           it('should indicate keys in left object but not in right',
             inject(function(ConiferLib) {
               expect(ConiferLib.objRelativeDiff({a:1,b:2,c:3}, {a:1})).
-                toBeEquivObjRelativeDiffs({diff:{a:0}, added:{}, deleted:{b:2,c:3}});
+                toBeEquivObjRelativeDiffs({relDiff:{a:0}, added:{}, deleted:{b:2,c:3}});
           }));
           it('should return relative difference for elements at shared keys',
             inject(function(ConiferLib) {
               expect(ConiferLib.objRelativeDiff({a:1,b:1,c:1}, {a:1.1,b:1.2,c:1.3})).
-                toBeEquivObjRelativeDiffs({diff:{a:0.1,b:0.2,c:0.3}, added:{}, deleted:{}});
+                toBeEquivObjRelativeDiffs({relDiff:{a:0.1,b:0.2,c:0.3}, added:{}, deleted:{}});
           }));
           it('should return Infinity for relative difference from 0',
             inject(function(ConiferLib) {
               expect(ConiferLib.objRelativeDiff({a:0, b:0}, {a:10, b:-10})).
-                toBeEquivObjRelativeDiffs({diff:{a:Infinity, b:-Infinity}, added:{}, deleted:{}});
+                toBeEquivObjRelativeDiffs({
+                    relDiff:{a:Infinity, b:-Infinity}, added:{}, deleted:{}});
           }));
           it('should return zeroes for nested identical objects', inject(function(ConiferLib) {
               expect(ConiferLib.objRelativeDiff({a:1,b:{d:4,e:5},c:3}, {a:1,b:{d:4,e:5},c:3})).
                 toBeEquivObjRelativeDiffs({
-                    diff:{a:0,b:{diff: {d:0,e:0}, added: {}, deleted: {}},c:0},
+                    relDiff:{a:0,b:{relDiff: {d:0,e:0}, added: {}, deleted: {}},c:0},
                     added:{},
                     deleted:{}
                 });
@@ -294,7 +295,7 @@ describe('service', function() {
           it('should return relative diffs for nested objects', inject(function(ConiferLib) {
               expect(ConiferLib.objRelativeDiff({a:1,b:{d:4,e:5},c:3}, {a:1,b:{d:8,e:15},c:3})).
                 toBeEquivObjRelativeDiffs({
-                    diff:{a:0,b:{diff: {d:1,e:2}, added: {}, deleted: {}},c:0},
+                    relDiff:{a:0,b:{relDiff: {d:1,e:2}, added: {}, deleted: {}},c:0},
                     added:{},
                     deleted:{}
                 });
@@ -302,7 +303,7 @@ describe('service', function() {
           it('should report added or deleted keys in nested objects', inject(function(ConiferLib) {
               expect(ConiferLib.objRelativeDiff({a:1,b:{d:4,e:5},c:3}, {a:1,b:{d:4,f:6},c:3})).
                 toBeEquivObjRelativeDiffs({
-                    diff:{a:0,b:{diff: {d:0}, added: {f:6}, deleted: {e:5}},c:0},
+                    relDiff:{a:0,b:{relDiff: {d:0}, added: {f:6}, deleted: {e:5}},c:0},
                     added:{},
                     deleted:{}
                 });
@@ -310,7 +311,7 @@ describe('service', function() {
           it('should report added or deleted nested objects', inject(function(ConiferLib) {
               expect(ConiferLib.objRelativeDiff({a:1,b:{d:4,e:5},c:3}, {a:1,c:3,f:{g:7}})).
                 toBeEquivObjRelativeDiffs({
-                    diff:{a:0,c:0},
+                    relDiff:{a:0,c:0},
                     added:{f:{g:7}},
                     deleted:{b:{d:4,e:5}}
                 });
@@ -318,7 +319,7 @@ describe('service', function() {
           it('should return zeroes for nested identical arrays', inject(function(ConiferLib) {
               expect(ConiferLib.objRelativeDiff({a:1,b:[4,5],c:3}, {a:1,b:[4,5],c:3})).
                 toBeEquivObjRelativeDiffs({
-                    diff:{a:0,b:{diff: [0,0], added: [], deleted: []},c:0},
+                    relDiff:{a:0,b:{relDiff: [0,0], added: [], deleted: []},c:0},
                     added:{},
                     deleted:{}
                 });
@@ -363,32 +364,38 @@ describe('service', function() {
                   "imageUrl": "img/specimen01.svg",
                   "dirty": false
               };
-              
+
+              // Notice:
+              //    * No analysis of imageUrl or dirtyBit
+              //    * No analysis of needles
+              //    * 3 levels of analysis: individual, treeParams, udTrunkBranchAngles
               expect(ConiferLib.objRelativeDiff(parentData, childData)).
-                toBeEquivObjRelativeDiffs({ 
-                        diff : {
-                            treeParams : { 
-                                diff : {
-                                    age : 0, 
-                                    udTrunkLengthIncrementPerYear : 0.03571428571428575, 
-                                    udTrunkBranchLengthRatio : 0, udTrunkBranchAngles : { 
-                                        diff : { 0 : 0, 1 : 0, 2 : -0.23664122137404583, 3 : 0 },
-                                        added : {  },
-                                        deleted : {  } 
-                                    }, 
-                                    udTrunkGirth : 0, 
-                                    udWhorlsPerYear : 0.5,
-                                    udWhorlSize : 0, 
-                                    udBranchGirth : 0, 
-                                    udBranchBranchLengthRatio : 0,
-                                    udBranchBranchLengthRatio2 : 0 },
-                                added : {  },
-                                deleted : {  } 
-                            } 
+                  toBeEquivObjRelativeDiffs({
+                        relDiff: {
+                            treeParams: {
+                                relDiff: {
+                                    age: 0,
+                                    udTrunkLengthIncrementPerYear: 0.035714,
+                                    udTrunkBranchLengthRatio: 0,
+                                    udTrunkBranchAngles: {
+                                        relDiff: { 0: 0, 1: 0, 2: -0.236641, 3: 0 },
+                                        added: {},
+                                        deleted: {}
+                                    },
+                                    udTrunkGirth: 0,
+                                    udWhorlsPerYear: 0.5,
+                                    udWhorlSize: 0,
+                                    udBranchGirth: 0,
+                                    udBranchBranchLengthRatio: 0,
+                                    udBranchBranchLengthRatio2: 0
+                                },
+                                added: {},
+                                deleted: {}
+                            }
                         },
-                        added : {  },
-                        deleted : {  } 
-                    });
+                        added: {},
+                        deleted: {}
+                  });
           }));
       });
   });
