@@ -20,6 +20,13 @@
 					</a>
 				</div>
 				<div>
+					<ul>
+						<li ng-repeat="stat in stats[individual.id]">
+							{{stat}}
+						</li>
+					</ul>
+				</div>
+				<div>
 					<button class="btn btn-primary propagate"
 					 		ng-click="propagate(individual.id)">
 						<strong>></strong>

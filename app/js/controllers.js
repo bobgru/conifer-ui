@@ -10,20 +10,21 @@ var app = angular.module('myApp.controllers', ['ngResource']);
 
 app.controller('PopulationCtrl', ['$scope', '$rootScope', 
                                   'Population', 'CurrentPopulation', 'Lineage',
-                                  'Image',
+                                  'Image', 'ConiferLib',
                                   
-    function($scope, $rootScope, Population, CurrentPopulation, Lineage, Image) {
+    function($scope, $rootScope, Population, CurrentPopulation, Lineage, Image, ConiferLib) {
         
         /*
             $scope
                 population
+                stats
                 lineage
                 selectedAncestor
         */
-        var initScope;
+        var initScope, calcStats;
 
         initScope = function() {
-            var populationIDs;
+            var populationIDs, i, parentID, childID, parent, child, diff, stats;
             
             populationIDs = CurrentPopulation.query();
             if (populationIDs.length == 0) {
@@ -33,9 +34,28 @@ app.controller('PopulationCtrl', ['$scope', '$rootScope',
             $scope.population = Population.queryIDs(populationIDs);
             $scope.lineage = Lineage.query();
 
+            calcStats(populationIDs);
+
             // OK if undefined -- nothing to select
             $scope.selectedAncestor = $rootScope.selectedAncestor;
         }
+
+        calcStats = function (populationIDs) {
+            var i, parentID, childID, parent, child, diff, stats;
+
+            parentID = populationIDs[0];
+            parent = Population.queryID(parentID);
+            $scope.stats = {};
+            $scope.stats[parentID] = [];
+            for (i = 1; i < populationIDs.length; ++i) {
+                childID = populationIDs[i];
+                child = Population.queryID(childID);
+                diff = ConiferLib.objRelativeDiff(parent.data.treeParams,child.data.treeParams);
+                stats = ConiferLib.sortObjRelativeDiffDesc(diff);
+                
+                $scope.stats[childID] = stats.relDiff.slice(0,2);
+            }
+        };
 
         $scope.selectAncestor = function (linId) {
            $scope.selectedAncestor = linId;

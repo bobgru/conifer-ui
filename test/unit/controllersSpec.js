@@ -61,6 +61,9 @@ describe('Controller', function(){
           spyOn(CurrentPopulation, 'query').andReturn(populationIDs);
           spyOn(CurrentPopulation, 'push');
           spyOn(Population, 'queryIDs').andReturn(population);
+          spyOn(Population, 'queryID').andCallFake(function (id) {
+              return population[id];
+          });
           spyOn(Lineage, 'query').andReturn(lineage);
      
           controller = createController();
