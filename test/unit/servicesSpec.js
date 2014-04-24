@@ -708,6 +708,62 @@ describe('service', function() {
               expect(ConiferLib.sortObjRelativeDiffDesc(input)).
                   toBeEquivObjRelativeDiffs(expected);
           }));
+          it('should sort nested adds against outer',
+                  inject(function(ConiferLib) {
+              var input, expected;
+
+              input = {
+                  relDiff:{
+                      d: {
+                          relDiff: {a:0, b:2, c:1},
+                          added: {j: {p: 9, q: 10.5}},
+                          deleted: {}
+                      },
+                      e: 3
+                  },
+                  added: {f: 10, g: 11},
+                  deleted: {}
+              };
+              expected = {
+                  relDiff:[
+                      {e: 3},
+                      {d: [{b:2}, {c:1}, {a:0}]}
+                  ],
+                  added: [{g: 11}, {d: [{j: [{q: 10.5}, {p: 9}]}]}, {f: 10}],
+                  deleted: []
+              };
+              
+              expect(ConiferLib.sortObjRelativeDiffDesc(input)).
+                  toBeEquivObjRelativeDiffs(expected);
+          }));
+          it('should sort nested adds and delets against outer',
+                  inject(function(ConiferLib) {
+              var input, expected;
+
+              input = {
+                  relDiff:{
+                      d: {
+                          relDiff: {a:0, b:2, c:1},
+                          added: {j: {p: 9, q: 10.5}},
+                          deleted: {k: {x: 11, y: 12.5, z: 14}}
+                      },
+                      e: 3
+                  },
+                  added: {f: 10, g: 11},
+                  deleted: {h: 13, i: 12}
+              };
+              expected = {
+                  relDiff:[
+                      {e: 3},
+                      {d: [{b:2}, {c:1}, {a:0}]}
+                  ],
+                  added: [{g: 11}, {d: [{j: [{q: 10.5}, {p: 9}]}]}, {f: 10}],
+                  deleted: [{d:[{k: [{z: 14}, {y: 12.5}, {x: 11}]}]}, {h: 13}, {i: 12}]
+              };
+              
+              expect(ConiferLib.sortObjRelativeDiffDesc(input)).
+                  toBeEquivObjRelativeDiffs(expected);
+          }));
       });
   });
 });
