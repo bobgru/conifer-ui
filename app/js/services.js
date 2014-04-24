@@ -267,10 +267,10 @@ appServices.factory('ConiferLib',
     function () {
         var isArray, isEmptyObject, objToArrayOfSingletons, valueOfSingletonObj,
             sortSingletonObjectArrayDesc, denormalizeObjRelativeDiff, mergeObjectProperties,
-            eps, epsilon, setEpsilon, immValueOfSingletonObj,
+            eps, epsilon, setEpsilon, immValueOfSingletonObj, altDenormalizeObjRelativeDiff,
             equivZeroWithin, equivZero, equiv, equivArrays, equivObjects,
             objRelativeDiff, arrayRelativeDiff, sortObjRelativeDiffDesc,
-            arrayUnion, arrayIndex, arrayContains,
+            arrayUnion, arrayIndex, arrayContains, escapeNestedObjKey,
             randomKey, randomKeyExcept, randomNormalDist;
 
         // From Crockford. Works for arrays defined within window or frame.
@@ -601,86 +601,92 @@ appServices.factory('ConiferLib',
             }
             return result;
         };
-        
+
+        escapeNestedObjKey = function (s) {
+            return s.replace(/\./g, '\\.');
+        };
+
         // Divide a normalized (i.e. original) relative difference object into
         // an object with relDiff, added, and deleted only at the top level, and
         // with properties from the original object under the corresponding keys
         // of the denormalized one.
         denormalizeObjRelativeDiff = function (diff) {
-            var i, keys, diff2, added2, deleted2,
-                extractDiff, extractTarget;
-                
-            extractDiff = function (obj) {
-                var i, keys, result, result2;
-                keys = Object.keys(obj);
-                result = {};
+            var dfsDiff, dfsTarget, result;
+            
+            dfsDiff = function (result, obj, keyPrefix) {
+                var i, keys, key2, keyPath, newObj;
                 
                 // If the keys consist of relDiff, added, and deleted,
                 // just pick relDiff and recurse, and throw away the
-                // intermediate level of object.
-                if (keys.length === 3 && arrayContains(keys, "relDiff") &&
-                        arrayContains(keys, "added") && arrayContains(keys, "deleted")) {
-                    result = extractDiff(obj.relDiff);
-                } else {
-                    // Otherwise, take all simple-type properties and
-                    // recurse into objects.
-                    for (i = 0; i < keys.length; ++i) {
-                        if (typeof obj[keys[i]] !== 'object') {
-                            result[keys[i]] = obj[keys[i]];
-                        } else {
-                            result2 = extractDiff(obj[keys[i]]);
-                            if (!isEmptyObject(result2)) {
-                                result[keys[i]] = result2;
-                            }
-                        }
-                    }
-                }
-                return result;
-            };
-
-            extractTarget = function (obj, target, ignoreSimpleProps) {
-                var i, keys, underDiff, underTarget, result, result2;
+                // intermediate level of object, i.e. use the same
+                // key prefix.
                 keys = Object.keys(obj);
-                result = {};
-
-                // If the keys consist of relDiff, added, and deleted,
-                // just pick relDiff and recurse, then pick the target and recurse.
-                // If the recursion into relDiff produces a non-empty result,
-                // store it, otherwise omit it. Always save the result of recursion
-                // into the target. Merge the two resultant objects and throw away
-                // the intermediate level of object.
                 if (keys.length === 3 && arrayContains(keys, "relDiff") &&
                         arrayContains(keys, "added") && arrayContains(keys, "deleted")) {
-                    underDiff = extractTarget(obj.relDiff, target, true);
-                    underTarget = extractTarget(obj[target], target, false);
-                    result = mergeObjectProperties([underDiff, underTarget]);
+                    dfsDiff(result, obj.relDiff, keyPrefix);
                 } else {
                     // Otherwise, take all simple-type properties and
                     // recurse into objects.
                     for (i = 0; i < keys.length; ++i) {
-                        if (typeof obj[keys[i]] !== 'object') {
-                            if (!ignoreSimpleProps) {
-                                result[keys[i]] = obj[keys[i]];
-                            }
+                        key2 = escapeNestedObjKey(keys[i]);
+                        keyPath = keyPrefix === '' ? key2 : keyPrefix + '.' + key2;
+                        if (obj[keys[i]] === undefined) {
+                            // I think this is supposed to be impossible.
+                            console.log('object prop has value === undefined');
+                        } else if (typeof obj[keys[i]] !== 'object') {
+                            newObj = {};
+                            newObj[keyPath] = obj[keys[i]];
+                            result.push(newObj);
                         } else {
-                            result2 = extractTarget(obj[keys[i]], target, false);;
-                            if (!isEmptyObject(result2)) {
-                                result[keys[i]] = result2;
-                            }
+                            dfsDiff(result, obj[keys[i]], keyPath);
                         }
                     }
                 }
-                return result;
             };
-
-            diff2 = extractDiff(diff);
-            added2 = extractTarget(diff, 'added', false);
-            deleted2 = extractTarget(diff, 'deleted', false);
-            return {relDiff: diff2, added: added2, deleted: deleted2};
+        
+            dfsTarget = function (result, obj, keyPrefix, target, ignoreSimpleProps) {
+                var i, keys, key2, keyPath, newObj;
+                
+                // If the keys consist of relDiff, added, and deleted,
+                // just pick relDiff and recurse, and throw away the
+                // intermediate level of object, i.e. use the same
+                // key prefix.
+                keys = Object.keys(obj);
+                if (keys.length === 3 && arrayContains(keys, "relDiff") &&
+                        arrayContains(keys, "added") && arrayContains(keys, "deleted")) {
+                    dfsTarget(result, obj.relDiff, keyPrefix, target, true);
+                    dfsTarget(result, obj[target], keyPrefix, target, false);
+                } else {
+                    // Otherwise, take all simple-type properties and
+                    // recurse into objects.
+                    for (i = 0; i < keys.length; ++i) {
+                        key2 = escapeNestedObjKey(keys[i]);
+                        keyPath = keyPrefix === '' ? key2 : keyPrefix + '.' + key2;
+                        if (obj[keys[i]] === undefined) {
+                            // I think this is supposed to be impossible.
+                            console.log('object prop has value === undefined');
+                        } else if (typeof obj[keys[i]] !== 'object') {
+                            if (!ignoreSimpleProps) {
+                                newObj = {};
+                                newObj[keyPath] = obj[keys[i]];
+                                result.push(newObj);
+                            }
+                        } else {
+                            dfsTarget(result, obj[keys[i]], keyPath, target, false);
+                        }
+                    }
+                }
+            };
+        
+            result = {relDiff: [], added: [], deleted: []};
+            dfsDiff(result.relDiff, diff, '');
+            dfsTarget(result.added, diff, '', 'added', false);
+            dfsTarget(result.deleted, diff, '', 'deleted', false);
+            return result;
         };
 
         sortObjRelativeDiffDesc = function (diff) {
-            var result, denormDiff, diff2, added2, deleted2;
+            var result, denormDiff;
             
             result = {relDiff:[], added: [], deleted: []};
             
@@ -690,16 +696,9 @@ appServices.factory('ConiferLib',
             }
             
             denormDiff = denormalizeObjRelativeDiff(diff);
-            
-            diff2 = objToArrayOfSingletons(denormDiff.relDiff);
-            result.relDiff = sortSingletonObjectArrayDesc(diff2);
-
-            added2 = objToArrayOfSingletons(denormDiff.added);
-            result.added = sortSingletonObjectArrayDesc(added2);
-
-            deleted2 = objToArrayOfSingletons(denormDiff.deleted);
-            result.deleted = sortSingletonObjectArrayDesc(deleted2);
-            
+            result.relDiff = sortSingletonObjectArrayDesc(denormDiff.relDiff);
+            result.added = sortSingletonObjectArrayDesc(denormDiff.added);
+            result.deleted = sortSingletonObjectArrayDesc(denormDiff.deleted);
             return result;
         };
         
@@ -724,6 +723,7 @@ appServices.factory('ConiferLib',
             'arrayRelativeDiff': arrayRelativeDiff,
             'objRelativeDiff': objRelativeDiff,
             'denormalizeObjRelativeDiff': denormalizeObjRelativeDiff,
+            'escapeNestedObjKey': escapeNestedObjKey,
             'sortObjRelativeDiffDesc': sortObjRelativeDiffDesc
         };
     });

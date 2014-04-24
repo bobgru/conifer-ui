@@ -443,7 +443,19 @@ describe('service', function() {
               expect(ConiferLib.mergeObjectProperties(input)).toEqual(expected);
           }));
       });
-      
+
+      describe('escapeNestedObjKey', function() {
+          it('should not change key without dot', inject(function(ConiferLib) {
+              expect(ConiferLib.escapeNestedObjKey('a')).toEqual('a');
+          }));
+          it('should escape a single dot', inject(function(ConiferLib) {
+              expect(ConiferLib.escapeNestedObjKey('a.b')).toEqual('a\\.b');
+          }));
+          it('should escape multiple dots', inject(function(ConiferLib) {
+              expect(ConiferLib.escapeNestedObjKey('a.b.c.d')).toEqual('a\\.b\\.c\\.d');
+          }));
+      });
+
       describe('denormalizeObjRelativeDiff', function() {
           it('should return empty for empty object', inject(function(ConiferLib) {
               var input, expected;
@@ -455,7 +467,7 @@ describe('service', function() {
           it('should not change single-level object', inject(function(ConiferLib) {
               var input, expected;
               input = {relDiff: {a:0, b:1, c:2}, added: {d: 3, e: 4}, deleted: {f: 5}};
-              expected = input;
+              expected = {relDiff: [{a:0}, {b:1}, {c:2}], added: [{d: 3}, {e: 4}], deleted: [{f: 5}]};
               expect(ConiferLib.denormalizeObjRelativeDiff(input)).toEqual(expected);
           }));
           it('should merge relDiff keys of nested objects', inject(function(ConiferLib) {
@@ -474,13 +486,13 @@ describe('service', function() {
                   deleted: {f: 5}
               };
               expected = {
-                  relDiff: {
-                      a:0,
-                      b:1,
-                      c: {g: 2}
-                  },
-                  added: {d: 3, e: 4},
-                  deleted: {f: 5}
+                  relDiff: [
+                      {a: 0},
+                      {b: 1},
+                      {'c.g': 2}
+                  ],
+                  added: [{d: 3}, {e: 4}],
+                  deleted: [{f: 5}]
               };
               expect(ConiferLib.denormalizeObjRelativeDiff(input)).toEqual(expected);
           }));
@@ -500,13 +512,13 @@ describe('service', function() {
                   deleted: {f: 5}
               };
               expected = {
-                  relDiff: {
-                      a:0,
-                      b:1,
-                      c: {g: 2}
-                  },
-                  added: {c: {x: "foo", y: "bar"}, d: 3, e: 4},
-                  deleted: {f: 5}
+                  relDiff: [
+                      {a:0},
+                      {b:1},
+                      {'c.g': 2}
+                  ],
+                  added: [{'c.x': "foo"}, {'c.y': "bar"}, {d: 3}, {e: 4}],
+                  deleted: [{f: 5}]
               };
               expect(ConiferLib.denormalizeObjRelativeDiff(input)).toEqual(expected);
           }));
@@ -526,36 +538,14 @@ describe('service', function() {
                   deleted: {f: 5}
               };
               expected = {
-                  relDiff: {
-                      a:0,
-                      b:1,
-                      c: {g: 2}
-                  },
-                  added: {c: {x: "foo", y: "bar"}, d: 3, e: 4},
-                  deleted: {c: {z: "zot"}, f: 5}
+                  relDiff: [
+                      {a:0},
+                      {b:1},
+                      {'c.g': 2}
+                  ],
+                  added: [{'c.x': "foo"}, {'c.y': "bar"}, {d: 3}, {e: 4}],
+                  deleted: [{'c.z': "zot"}, {f: 5}]
               };
-              expect(ConiferLib.denormalizeObjRelativeDiff(input)).toEqual(expected);
-          }));
-          it('should merge nested diffs (again)', inject(function(ConiferLib) {
-              var input, expected;
-
-              input = {
-                  relDiff:{
-                      d: {
-                          relDiff: {a:0, b:2, c:1},
-                          added: {},
-                          deleted: {}
-                      }
-                  },
-                  added: {},
-                  deleted: {}
-              };
-              expected = {
-                  relDiff: {d: {a:0, b:2, c:1}},
-                  added: {},
-                  deleted: {}
-              };
-              
               expect(ConiferLib.denormalizeObjRelativeDiff(input)).toEqual(expected);
           }));
       });
@@ -607,7 +597,7 @@ describe('service', function() {
           }));
       });
       
-      describe('sortDescObjRelativeDiff', function() {
+      describe('sortObjRelativeDiffDesc', function() {
           it('should return empty for empty objects', inject(function(ConiferLib) {
               var input, expected;
               
@@ -666,8 +656,7 @@ describe('service', function() {
               expect(ConiferLib.sortObjRelativeDiffDesc(input)).
                   toBeEquivObjRelativeDiffs(expected);
           }));
-          it('should sort fields of nested diffs',
-                  inject(function(ConiferLib) {
+          it('should sort fields of nested diffs', inject(function(ConiferLib) {
               var input, expected;
 
               input = {
@@ -682,7 +671,7 @@ describe('service', function() {
                   deleted: {}
               };
               expected = {
-                  relDiff: [{d: [{b:2}, {c:1}, {a:0}]}],
+                  relDiff: [{'d.b':2}, {'d.c':1}, {'d.a':0}],
                   added: [],
                   deleted: []
               };
@@ -707,10 +696,7 @@ describe('service', function() {
                   deleted: {}
               };
               expected = {
-                  relDiff:[
-                      {e: 3},
-                      {d: [{b:2}, {c:1}, {a:0}]}
-                  ],
+                  relDiff:[{e: 3}, {'d.b':2}, {'d.c':1}, {'d.a':0}],
                   added: [],
                   deleted: []
               };
@@ -735,18 +721,15 @@ describe('service', function() {
                   deleted: {}
               };
               expected = {
-                  relDiff:[
-                      {e: 3},
-                      {d: [{b:2}, {c:1}, {a:0}]}
-                  ],
-                  added: [{g: 11}, {d: [{j: [{q: 10.5}, {p: 9}]}]}, {f: 10}],
+                  relDiff:[{e: 3}, {'d.b':2}, {'d.c':1}, {'d.a':0}],
+                  added: [{g: 11}, {'d.j.q': 10.5}, {f: 10}, {'d.j.p': 9}],
                   deleted: []
               };
               
               expect(ConiferLib.sortObjRelativeDiffDesc(input)).
                   toBeEquivObjRelativeDiffs(expected);
           }));
-          it('should sort nested adds and delets against outer',
+          it('should sort nested adds and deletes against outer',
                   inject(function(ConiferLib) {
               var input, expected;
 
@@ -763,12 +746,9 @@ describe('service', function() {
                   deleted: {h: 13, i: 12}
               };
               expected = {
-                  relDiff:[
-                      {e: 3},
-                      {d: [{b:2}, {c:1}, {a:0}]}
-                  ],
-                  added: [{g: 11}, {d: [{j: [{q: 10.5}, {p: 9}]}]}, {f: 10}],
-                  deleted: [{d:[{k: [{z: 14}, {y: 12.5}, {x: 11}]}]}, {h: 13}, {i: 12}]
+                  relDiff:[{e: 3}, {'d.b':2}, {'d.c':1}, {'d.a':0}],
+                  added: [{g: 11}, {'d.j.q': 10.5}, {f: 10}, {'d.j.p': 9}],
+                  deleted: [{'d.k.z': 14}, {h: 13}, {'d.k.y': 12.5}, {i: 12}, {'d.k.x': 11}]
               };
               
               expect(ConiferLib.sortObjRelativeDiffDesc(input)).
