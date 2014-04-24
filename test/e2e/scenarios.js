@@ -17,6 +17,12 @@ describe('my app', function() {
         browser.get('/app/index.html#/population');
         browser.get('#/view/0');
         expect(browser.getLocationAbsUrl()).toMatch("/view/0");
+        
+        // TODO What's a better way to do this?
+        element.all(by.className('individual-template')).first().then(
+            function(elem) { expect(1).toEqual(1); },
+            function() { expect(0).toEqual(1); }
+        );
     });
 
     it('should remain visible after propagating', function() {
