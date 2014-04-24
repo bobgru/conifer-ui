@@ -37,8 +37,20 @@ describe('service', function() {
           it('should return true for empty array', inject(function(ConiferLib) {
               expect(ConiferLib.isArray([])).toEqual(true);
           }));
+          it('should return true for nonempty array', inject(function(ConiferLib) {
+              expect(ConiferLib.isArray([1,2,3])).toEqual(true);
+          }));
+          it('should return true for nested arrays', inject(function(ConiferLib) {
+              expect(ConiferLib.isArray([[1,2,3]])).toEqual(true);
+          }));
+          it('should return true for nested array of objects', inject(function(ConiferLib) {
+              expect(ConiferLib.isArray([[{a: 1}, {b: 2}, {c: 3}]])).toEqual(true);
+          }));
           it('should return false for empty object', inject(function(ConiferLib) {
               expect(ConiferLib.isArray({})).toEqual(false);
+          }));
+          it('should return false for non-empty object', inject(function(ConiferLib) {
+              expect(ConiferLib.isArray({a: "a"})).toEqual(false);
           }));
           it('should return false for number', inject(function(ConiferLib) {
               expect(ConiferLib.isArray(1)).toEqual(false);
@@ -396,6 +408,305 @@ describe('service', function() {
                         added: {},
                         deleted: {}
                   });
+          }));
+      });
+      
+      describe('mergeObjectProperties', function() {
+          it('should return empty for empty list', inject(function(ConiferLib) {
+              var input, expected;
+              input = [];
+              expected = {};
+              expect(ConiferLib.mergeObjectProperties(input)).toEqual(expected);
+          }));
+          it('should not change a single singleton object', inject(function(ConiferLib) {
+              var input, expected;
+              input = [{a: 5}];
+              expected = {a: 5};
+              expect(ConiferLib.mergeObjectProperties(input)).toEqual(expected);
+          }));
+          it('should merge disjoint objects', inject(function(ConiferLib) {
+              var input, expected;
+              input = [{a: 5}, {b: 6}, {c: 7}];
+              expected = {a: 5, b: 6, c: 7};
+              expect(ConiferLib.mergeObjectProperties(input)).toEqual(expected);
+          }));
+          it('should merge non-disjoint objects', inject(function(ConiferLib) {
+              var input, expected;
+              input = [{a: 5}, {b: 6}, {a: 3, c: 7}];
+              expected = {a: 3, b: 6, c: 7};
+              expect(ConiferLib.mergeObjectProperties(input)).toEqual(expected);
+          }));
+          it('should preserve nested objects', inject(function(ConiferLib) {
+              var input, expected;
+              input = [{a: 5}, {b: {d: 6}}, {a: 3, c: 7}];
+              expected = {a: 3, b: {d: 6}, c: 7};
+              expect(ConiferLib.mergeObjectProperties(input)).toEqual(expected);
+          }));
+      });
+      
+      describe('denormalizeObjRelativeDiff', function() {
+          it('should return empty for empty object', inject(function(ConiferLib) {
+              var input, expected;
+              input = {relDiff: {}, added: {}, deleted: {}};
+              expected = input;
+              expect(ConiferLib.denormalizeObjRelativeDiff(input)).
+                  toEqual({relDiff: {}, added: {}, deleted: {}});
+          }));
+          it('should not change single-level object', inject(function(ConiferLib) {
+              var input, expected;
+              input = {relDiff: {a:0, b:1, c:2}, added: {d: 3, e: 4}, deleted: {f: 5}};
+              expected = input;
+              expect(ConiferLib.denormalizeObjRelativeDiff(input)).toEqual(expected);
+          }));
+          it('should merge relDiff keys of nested objects', inject(function(ConiferLib) {
+              var input, expected;
+              input = {
+                  relDiff: {
+                      a:0,
+                      b:1,
+                      c: {
+                          relDiff: {g: 2},
+                          added: {},
+                          deleted: {}
+                      }
+                  },
+                  added: {d: 3, e: 4},
+                  deleted: {f: 5}
+              };
+              expected = {
+                  relDiff: {
+                      a:0,
+                      b:1,
+                      c: {g: 2}
+                  },
+                  added: {d: 3, e: 4},
+                  deleted: {f: 5}
+              };
+              expect(ConiferLib.denormalizeObjRelativeDiff(input)).toEqual(expected);
+          }));
+          it('should merge added keys of nested objects', inject(function(ConiferLib) {
+              var input, expected;
+              input = {
+                  relDiff: {
+                      a:0,
+                      b:1,
+                      c: {
+                          relDiff: {g: 2},
+                          added: {x: "foo", y: "bar"},
+                          deleted: {}
+                      }
+                  },
+                  added: {d: 3, e: 4},
+                  deleted: {f: 5}
+              };
+              expected = {
+                  relDiff: {
+                      a:0,
+                      b:1,
+                      c: {g: 2}
+                  },
+                  added: {c: {x: "foo", y: "bar"}, d: 3, e: 4},
+                  deleted: {f: 5}
+              };
+              expect(ConiferLib.denormalizeObjRelativeDiff(input)).toEqual(expected);
+          }));
+          it('should merge deleted keys of nested objects', inject(function(ConiferLib) {
+              var input, expected;
+              input = {
+                  relDiff: {
+                      a:0,
+                      b:1,
+                      c: {
+                          relDiff: {g: 2},
+                          added: {x: "foo", y: "bar"},
+                          deleted: {z: "zot"}
+                      }
+                  },
+                  added: {d: 3, e: 4},
+                  deleted: {f: 5}
+              };
+              expected = {
+                  relDiff: {
+                      a:0,
+                      b:1,
+                      c: {g: 2}
+                  },
+                  added: {c: {x: "foo", y: "bar"}, d: 3, e: 4},
+                  deleted: {c: {z: "zot"}, f: 5}
+              };
+              expect(ConiferLib.denormalizeObjRelativeDiff(input)).toEqual(expected);
+          }));
+          it('should merge nested diffs (again)', inject(function(ConiferLib) {
+              var input, expected;
+
+              input = {
+                  relDiff:{
+                      d: {
+                          relDiff: {a:0, b:2, c:1},
+                          added: {},
+                          deleted: {}
+                      }
+                  },
+                  added: {},
+                  deleted: {}
+              };
+              expected = {
+                  relDiff: {d: {a:0, b:2, c:1}},
+                  added: {},
+                  deleted: {}
+              };
+              
+              expect(ConiferLib.denormalizeObjRelativeDiff(input)).toEqual(expected);
+          }));
+      });
+      
+      describe('objToArrayOfSingletons', function() {
+          it('should return empty for empty object', inject(function(ConiferLib) {
+              expect(ConiferLib.objToArrayOfSingletons({})).toEqual([]);
+          }));
+          it('should return singletons for object properties', inject(function(ConiferLib) {
+              expect(ConiferLib.objToArrayOfSingletons({a: 0, b: "x", c: false})).
+                  toEqual([{a: 0}, {b: "x"}, {c: false}]);
+          }));
+          it('should recurse into nested objects', inject(function(ConiferLib) {
+              expect(ConiferLib.objToArrayOfSingletons({a: 0, b: {d: "x", e: 1}, c: false})).
+                  toEqual([{a: 0}, {b: [{d: "x"}, {e: 1}]}, {c: false}]);
+          }));
+          it('should recurse into nested objects (again)', inject(function(ConiferLib) {
+              var input, expected;
+              input = {d: {a: 0, b: 2, c: 1}};
+              expected = [{d: [{a: 0}, {b: 2}, {c: 1}]}];
+              expect(ConiferLib.objToArrayOfSingletons(input)).toEqual(expected);
+          }));
+      });
+      
+      describe('sortSingletonObjectArrayDesc', function() {
+          it('should return empty for empty object', inject(function(ConiferLib) {
+              expect(ConiferLib.sortSingletonObjectArrayDesc([])).toEqual([]);
+          }));
+          it('should sort array of non-nested singletons', inject(function(ConiferLib) {
+              var input, expected;
+              input =    [{a: 0}, {b: 2}, {c: 1}];
+              expected = [{b: 2}, {c: 1}, {a: 0}];
+              expect(ConiferLib.sortSingletonObjectArrayDesc(input)).toEqual(expected);
+          }));
+          it('should recurse into nested objects', inject(function(ConiferLib) {
+              var input, expected;
+              input =    [{d: [{a: 0}, {b: 2}, {c: 1}]}];
+              expected = [{d: [{b: 2}, {c: 1}, {a: 0}]}];
+              expect(ConiferLib.sortSingletonObjectArrayDesc(input)).toEqual(expected);
+          }));
+      });
+      
+      describe('valueOfSingletonObj', function() {
+          it('should return value of single object property', inject(function(ConiferLib) {
+              expect(ConiferLib.valueOfSingletonObj({a: 123})).toEqual(123);
+          }));
+          it('should return first value of array of singletons', inject(function(ConiferLib) {
+              expect(ConiferLib.valueOfSingletonObj({c: [{a: 456}, {b: 789}]})).toEqual(456);
+          }));
+      });
+      
+      describe('sortDescObjRelativeDiff', function() {
+          it('should return empty for empty objects', inject(function(ConiferLib) {
+              var input, expected;
+              
+              input = {relDiff:{}, added:{}, deleted:{}};
+              expected = {relDiff:[], added:[], deleted:[]};
+              
+              expect(ConiferLib.sortObjRelativeDiffDesc(input)).
+                  toBeEquivObjRelativeDiffs(expected);
+          }));
+          it('should convert singleton diff to array', inject(function(ConiferLib) {
+              var input, expected;
+              
+              input = {relDiff:{a:0}, added:{}, deleted:{}};
+              expected = {relDiff:[{a:0}], added:[], deleted:[]};
+              
+              expect(ConiferLib.sortObjRelativeDiffDesc(input)).
+                  toBeEquivObjRelativeDiffs(expected);
+          }));
+          it('should sort numbers in descending order within single-level diff',
+                  inject(function(ConiferLib) {
+              var input, expected;
+              
+              input = {relDiff:{a:0, b:2, c:1}, added:{}, deleted:{}};
+              expected = {relDiff:[{b:2}, {c:1}, {a:0}], added:[], deleted:[]};
+              
+              expect(ConiferLib.sortObjRelativeDiffDesc(input)).
+                  toBeEquivObjRelativeDiffs(expected);
+          }));
+          it('should sort numbers in descending order within single-level added',
+                  inject(function(ConiferLib) {
+              var input, expected;
+              
+              input = {relDiff:{}, added:{a:0, b:2, c:1}, deleted:{}};
+              expected = {relDiff:[], added:[{b:2}, {c:1}, {a:0}], deleted:[]};
+              
+              expect(ConiferLib.sortObjRelativeDiffDesc(input)).
+                  toBeEquivObjRelativeDiffs(expected);
+          }));
+          it('should sort numbers in descending order within single-level deleted',
+                  inject(function(ConiferLib) {
+              var input, expected;
+              
+              input = {relDiff:{}, added:{}, deleted:{a:0, b:2, c:1}};
+              expected = {relDiff:[], added:[], deleted:[{b:2}, {c:1}, {a:0}]};
+              
+              expect(ConiferLib.sortObjRelativeDiffDesc(input)).
+                  toBeEquivObjRelativeDiffs(expected);
+          }));
+          it('should sort fields of nested diffs',
+                  inject(function(ConiferLib) {
+              var input, expected;
+
+              input = {
+                  relDiff:{
+                      d: {
+                          relDiff: {a:0, b:2, c:1},
+                          added: {},
+                          deleted: {}
+                      }
+                  },
+                  added: {},
+                  deleted: {}
+              };
+              expected = {
+                  relDiff: [{d: [{b:2}, {c:1}, {a:0}]}],
+                  added: [],
+                  deleted: []
+              };
+              
+              expect(ConiferLib.sortObjRelativeDiffDesc(input)).
+                  toBeEquivObjRelativeDiffs(expected);
+          }));
+          it('should sort nested diffs against outer diff according to highest value',
+                  inject(function(ConiferLib) {
+              var input, expected;
+
+              input = {
+                  relDiff:{
+                      d: {
+                          relDiff: {a:0, b:2, c:1},
+                          added: {},
+                          deleted: {}
+                      },
+                      e: 3
+                  },
+                  added: {},
+                  deleted: {}
+              };
+              expected = {
+                  relDiff:[
+                      {e: 3},
+                      {d: [{b:2}, {c:1}, {a:0}]}
+                  ],
+                  added: [],
+                  deleted: []
+              };
+              
+              expect(ConiferLib.sortObjRelativeDiffDesc(input)).
+                  toBeEquivObjRelativeDiffs(expected);
           }));
       });
   });

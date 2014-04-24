@@ -265,15 +265,112 @@ appServices.factory('Image', [ '$http', 'Population',
 
 appServices.factory('ConiferLib',
     function () {
-        var isArray, eps, epsilon, setEpsilon,
+        var isArray, isEmptyObject, objToArrayOfSingletons, valueOfSingletonObj,
+            sortSingletonObjectArrayDesc, denormalizeObjRelativeDiff, mergeObjectProperties,
+            eps, epsilon, setEpsilon, immValueOfSingletonObj,
             equivZeroWithin, equivZero, equiv, equivArrays, equivObjects,
-            objRelativeDiff, arrayRelativeDiff, arrayUnion, arrayIndex, arrayContains,
+            objRelativeDiff, arrayRelativeDiff, sortObjRelativeDiffDesc,
+            arrayUnion, arrayIndex, arrayContains,
             randomKey, randomKeyExcept, randomNormalDist;
 
         // From Crockford. Works for arrays defined within window or frame.
         // Note: I removed the initial test of a, which allowed checking simple types.
         isArray = function (a) {
             return typeof a === 'object' && a.constructor === Array;
+        };
+
+        isEmptyObject = function (obj) {
+            var prop;
+            for (prop in obj) {
+                if (obj.hasOwnProperty(prop)) {
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        // Return an array of singleton objects, one for each
+        // non-inherited property of the input. Recurses into
+        // nested objects.
+        objToArrayOfSingletons = function (obj) {
+            var result, key, obj2;
+            result = [];
+            for (key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    obj2 = {};
+                    if (typeof obj[key] === 'object') {
+                        obj2[key] = objToArrayOfSingletons(obj[key]);
+                    } else {
+                        obj2[key] = obj[key];
+                    }
+                    result.push(obj2);
+                }
+            }
+            return result;
+        };
+
+        // Extract the value of the key of a singleton object,
+        // recursing into nested objects and arrays.
+        valueOfSingletonObj = function (obj) {
+            var key;
+            for (key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    if (isArray(obj[key])) {
+                        return valueOfSingletonObj(obj[key][0]);
+                    } else {
+                        return obj[key];
+                    }
+                }
+            }
+        };
+
+        // Extract the value of the key of a singleton object
+        // without recursion.
+        immValueOfSingletonObj = function (obj) {
+            var key;
+            for (key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    return obj[key];
+                }
+            }
+        };
+
+        // Sort the input in descending order by the value of the singleton 
+        // object elements. Sorts in-place by bubblesort.
+        // Nested objects are sorted, and placed within the outer object
+        // according to the highest value contained.
+        sortSingletonObjectArrayDesc = function (arr) {
+            var i, j, temp, vali, valj;
+
+            // Pass simple value back as sorted.
+            if (!isArray(arr) && typeof arr !== 'object') {
+                return arr;
+            }
+
+            // Pass over all properties and sort nested objects.
+            for (i = 0; i < arr.length; ++i) {
+                if (isArray(arr[i])) {
+                    sortSingletonObjectArrayDesc(arr[i]);
+                } else if (typeof arr[i] === 'object') {
+                    vali = immValueOfSingletonObj(arr[i]);
+                    sortSingletonObjectArrayDesc(vali);
+                }
+            }
+
+            // Bubblesort the array, treating nested objects as
+            // simple values as reported by valueOfSingletonObj.
+            for (i = 0; i < arr.length - 1; ++i) {
+                for (j = i + 1; j < arr.length; ++j) {
+                    vali = valueOfSingletonObj(arr[i]);
+                    valj = valueOfSingletonObj(arr[j]);
+                    if (vali < valj) {
+                        temp = arr[i];
+                        arr[i] = arr[j];
+                        arr[j] = temp;
+                    }
+                }
+            }
+            return arr;
         };
 
         // The functions in this module that take number arguments, or array,
@@ -490,8 +587,130 @@ appServices.factory('ConiferLib',
             return result;
         };
 
+        // Take union of properties of list of objects. If objects share
+        // properties, the last value wins.
+        mergeObjectProperties = function (objs) {
+            var i, j, obj, keys, result;
+            result = {};
+            for (i = 0; i < objs.length; ++i) {
+                obj = objs[i];
+                keys = Object.keys(obj);
+                for (j = 0; j < keys.length; ++j) {
+                    result[keys[j]] = obj[keys[j]];
+                }
+            }
+            return result;
+        };
+        
+        // Divide a normalized (i.e. original) relative difference object into
+        // an object with relDiff, added, and deleted only at the top level, and
+        // with properties from the original object under the corresponding keys
+        // of the denormalized one.
+        denormalizeObjRelativeDiff = function (diff) {
+            var i, keys, diff2, added2, deleted2,
+                extractDiff, extractTarget;
+                
+            extractDiff = function (obj) {
+                var i, keys, result, result2;
+                keys = Object.keys(obj);
+                result = {};
+                
+                // If the keys consist of relDiff, added, and deleted,
+                // just pick relDiff and recurse, and throw away the
+                // intermediate level of object.
+                if (keys.length === 3 && arrayContains(keys, "relDiff") &&
+                        arrayContains(keys, "added") && arrayContains(keys, "deleted")) {
+                    result = extractDiff(obj.relDiff);
+                } else {
+                    // Otherwise, take all simple-type properties and
+                    // recurse into objects.
+                    for (i = 0; i < keys.length; ++i) {
+                        if (typeof obj[keys[i]] !== 'object') {
+                            result[keys[i]] = obj[keys[i]];
+                        } else {
+                            result2 = extractDiff(obj[keys[i]]);
+                            if (!isEmptyObject(result2)) {
+                                result[keys[i]] = result2;
+                            }
+                        }
+                    }
+                }
+                return result;
+            };
+
+            extractTarget = function (obj, target, ignoreSimpleProps) {
+                var i, keys, underDiff, underTarget, result, result2;
+                keys = Object.keys(obj);
+                result = {};
+
+                // If the keys consist of relDiff, added, and deleted,
+                // just pick relDiff and recurse, then pick the target and recurse.
+                // If the recursion into relDiff produces a non-empty result,
+                // store it, otherwise omit it. Always save the result of recursion
+                // into the target. Merge the two resultant objects and throw away
+                // the intermediate level of object.
+                if (keys.length === 3 && arrayContains(keys, "relDiff") &&
+                        arrayContains(keys, "added") && arrayContains(keys, "deleted")) {
+                    underDiff = extractTarget(obj.relDiff, target, true);
+                    underTarget = extractTarget(obj[target], target, false);
+                    result = mergeObjectProperties([underDiff, underTarget]);
+                } else {
+                    // Otherwise, take all simple-type properties and
+                    // recurse into objects.
+                    for (i = 0; i < keys.length; ++i) {
+                        if (typeof obj[keys[i]] !== 'object') {
+                            if (!ignoreSimpleProps) {
+                                result[keys[i]] = obj[keys[i]];
+                            }
+                        } else {
+                            result2 = extractTarget(obj[keys[i]], target, false);;
+                            if (!isEmptyObject(result2)) {
+                                result[keys[i]] = result2;
+                            }
+                        }
+                    }
+                }
+                return result;
+            };
+
+            diff2 = extractDiff(diff);
+            added2 = extractTarget(diff, 'added', false);
+            deleted2 = extractTarget(diff, 'deleted', false);
+            return {relDiff: diff2, added: added2, deleted: deleted2};
+        };
+
+        sortObjRelativeDiffDesc = function (diff) {
+            var result, denormDiff, diff2, added2, deleted2;
+            
+            result = {relDiff:[], added: [], deleted: []};
+            
+            if (isEmptyObject(diff.relDiff) && isEmptyObject(diff.added) &&
+                    isEmptyObject(diff.deleted)) {
+                return result;
+            }
+            
+            denormDiff = denormalizeObjRelativeDiff(diff);
+            
+            diff2 = objToArrayOfSingletons(denormDiff.relDiff);
+            result.relDiff = sortSingletonObjectArrayDesc(diff2);
+
+            added2 = objToArrayOfSingletons(denormDiff.added);
+            result.added = sortSingletonObjectArrayDesc(added2);
+
+            deleted2 = objToArrayOfSingletons(denormDiff.deleted);
+            result.deleted = sortSingletonObjectArrayDesc(deleted2);
+            
+            return result;
+        };
+        
         return {
             'isArray': isArray,
+            'isEmptyObject': isEmptyObject,
+            'objToArrayOfSingletons': objToArrayOfSingletons,
+            'mergeObjectProperties': mergeObjectProperties,
+            'immValueOfSingletonObj': immValueOfSingletonObj,
+            'valueOfSingletonObj': valueOfSingletonObj,
+            'sortSingletonObjectArrayDesc': sortSingletonObjectArrayDesc,
             'epsilon': epsilon,
             'setEpsilon': setEpsilon,
             'equivZeroWithin': equivZeroWithin,
@@ -503,6 +722,8 @@ appServices.factory('ConiferLib',
             'arrayContains': arrayContains,
             'arrayUnion': arrayUnion,
             'arrayRelativeDiff': arrayRelativeDiff,
-            'objRelativeDiff': objRelativeDiff
+            'objRelativeDiff': objRelativeDiff,
+            'denormalizeObjRelativeDiff': denormalizeObjRelativeDiff,
+            'sortObjRelativeDiffDesc': sortObjRelativeDiffDesc
         };
     });
