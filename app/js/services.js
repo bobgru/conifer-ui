@@ -335,8 +335,8 @@ appServices.factory('ConiferLib',
             }
         };
 
-        // Sort the input in descending order by the value of the singleton 
-        // object elements. Sorts in-place by bubblesort.
+        // Sort the input in descending order by the absolute value of
+        // the singleton object elements. Sorts in-place by bubblesort.
         // Nested objects are sorted, and placed within the outer object
         // according to the highest value contained.
         sortSingletonObjectArrayDesc = function (arr) {
@@ -361,8 +361,8 @@ appServices.factory('ConiferLib',
             // simple values as reported by valueOfSingletonObj.
             for (i = 0; i < arr.length - 1; ++i) {
                 for (j = i + 1; j < arr.length; ++j) {
-                    vali = valueOfSingletonObj(arr[i]);
-                    valj = valueOfSingletonObj(arr[j]);
+                    vali = Math.abs(valueOfSingletonObj(arr[i]));
+                    valj = Math.abs(valueOfSingletonObj(arr[j]));
                     if (vali < valj) {
                         temp = arr[i];
                         arr[i] = arr[j];

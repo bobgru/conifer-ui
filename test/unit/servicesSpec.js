@@ -636,6 +636,16 @@ describe('service', function() {
               expect(ConiferLib.sortObjRelativeDiffDesc(input)).
                   toBeEquivObjRelativeDiffs(expected);
           }));
+          it('should sort numbers in single-level diff descending by absolute value',
+                  inject(function(ConiferLib) {
+              var input, expected;
+              
+              input = {relDiff:{a:0, b:-2, c:1}, added:{}, deleted:{}};
+              expected = {relDiff:[{b:-2}, {c:1}, {a:0}], added:[], deleted:[]};
+              
+              expect(ConiferLib.sortObjRelativeDiffDesc(input)).
+                  toBeEquivObjRelativeDiffs(expected);
+          }));
           it('should sort numbers in descending order within single-level added',
                   inject(function(ConiferLib) {
               var input, expected;
