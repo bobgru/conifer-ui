@@ -8,8 +8,41 @@
 	<button class="btn btn-primary"
 	 	ng-click="drawTree()">
 	</button> -->
+
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-xs-6 col-sm-4 col-md-3 col-lg-2"
+					ng-repeat="individual in population">
+				<div>
+					<div>
+						<a ng-href="#/view/{{individual.id}}">
+							<img ng-src="{{individual.data.imageUrl}}"
+								 ng-class="{ selected:{{$index == 0}} }" style="width: 100%, height: 100%">
+							</img>
+						</a>
+					</div>
+				</div>
+				<div>
+					<ul>
+						<li ng-repeat="stat in stats[individual.id]">
+							{{stat}}
+						</li>
+					</ul>
+				</div>
+				<div>
+					<button class="btn btn-primary propagate"
+					 		ng-click="propagate(individual.id)">
+						<!-- <strong>></strong> -->
+						<span class="glyphicon glyphicon-play"></span>
+					</button>
+					<!-- <a class="btn btn-primary"
+										 	ng-href="#/view/{{individual.id}}"><tt>i</tt></a> -->
+				</div>
+			</div>
+		</div>
+	</div>
 	
-	<table class="table-bordered">
+	<!-- <table class="table-bordered">
 		<tr>
 			<td ng-repeat="individual in population">
 				<div>
@@ -29,15 +62,12 @@
 				<div>
 					<button class="btn btn-primary propagate"
 					 		ng-click="propagate(individual.id)">
-						<strong>></strong>
-						<!-- <span class="glyphicon glyphicon-play"></span> -->
+						<span class="glyphicon glyphicon-play"></span>
 					</button>
-					<!-- <a class="btn btn-primary"
-										 	ng-href="#/view/{{individual.id}}"><tt>i</tt></a> -->
 				</div>
 			</td>
 		</tr>
-	</table>
+	</table> -->
 		
 	<table class="table-bordered">
 		<tr>

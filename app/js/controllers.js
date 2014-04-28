@@ -137,7 +137,7 @@ app.controller('ExperimentCtrl', ['$scope', '$routeParams',
 
         // Must call $digest to enable the $watch to see changes from initial values.
         $scope.$watch('individualData.treeParams', setDirtyBit, true);
-        $scope.$digest();
+        //$scope.$digest();
 
         $scope.test = function() {
             Image.get($scope.individualData);

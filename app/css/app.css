@@ -46,3 +46,14 @@
 .ancestor {}
 
 .individual-template {}
+
+.svg-container {
+    width: 95px;
+    height: 160px;
+}
+
+.clearfix:after {
+  content: "";
+  display: table;
+  clear: both;
+}
